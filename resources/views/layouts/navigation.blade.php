@@ -15,6 +15,12 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+
+                    @if(in_array(Auth::user()->role, ['admin','staff']))
+                        <x-nav-link :href="route('events.index')" :active="request()->routeIs('events.*')">
+                            {{ __('Eventos') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -70,7 +76,14 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+
+            @if(in_array(Auth::user()->role, ['admin','staff']))
+                <x-responsive-nav-link :href="route('events.index')" :active="request()->routeIs('events.*')">
+                    {{ __('Eventos') }}
+                </x-responsive-nav-link>
+            @endif
         </div>
+
 
         <!-- Responsive Settings Options -->
         <div class="pt-4 pb-1 border-t border-gray-200">
