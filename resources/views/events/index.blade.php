@@ -30,6 +30,7 @@
                                 <th class="text-left py-2">Início</th>
                                 <th class="text-left py-2">Fim</th>
                                 <th class="text-left py-2">Horas</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -39,6 +40,12 @@
                                     <td class="py-2">{{ $event->start_at->format('d/m/Y H:i') }}</td>
                                     <td class="py-2">{{ $event->end_at->format('d/m/Y H:i') }}</td>
                                     <td class="py-2">{{ $event->hours ?? '-' }}</td>
+                                    <td class="py-2 flex gap-2">  <a href="{{ route('events.view-edit', $event->id) }}"
+                                        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                                        Editar </a>
+                                        <a href="{{ route('events.delete', $event->id) }}"
+                                        class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                                        Remover</a></td>
                                 </tr>
                             @endforeach
                         </tbody>
