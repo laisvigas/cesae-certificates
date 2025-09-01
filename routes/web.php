@@ -13,9 +13,12 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::get('/dashboard', fn () => view('dashboard'))->name('dashboard');
 
     // Listagem de eventos
-    Route::get('/events', [EventController::class, 'index'])->name('events.index');
-    Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
-    Route::post('/events', [EventController::class, 'store'])->name('events.store');
+    Route::get('/events', [EventController::class, 'indexEvent'])->name('events.index');
+    Route::get('/events/create-event', [EventController::class, 'createEvent'])->name('events.create');
+    Route::get('/event-delete/{id}', [EventController::class, 'deleteEvent'])->name('events.delete');
+    Route::get('/events/view-edit-event/{id}', [EventController::class, 'viewEditEvent']) -> name('events.view-edit');
+    Route::put('/event-update', [EventController::class, 'updateEvent']) -> name('events.update');
+    Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
 
 });
 
