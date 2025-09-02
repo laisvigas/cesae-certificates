@@ -30,6 +30,7 @@
                                 <th class="text-left py-2">Início</th>
                                 <th class="text-left py-2">Fim</th>
                                 <th class="text-left py-2">Horas</th>
+                                <th class="text-left py-2">Participantes</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -40,6 +41,18 @@
                                     <td class="py-2">{{ $event->start_at->format('d/m/Y H:i') }}</td>
                                     <td class="py-2">{{ $event->end_at->format('d/m/Y H:i') }}</td>
                                     <td class="py-2">{{ $event->hours ?? '-' }}</td>
+                                    <!-- Campo da tabela com numero de participantes e ícones clicáveis -->
+                                    <td class="py-2">
+                                        <a href=""><span class="inline-flex items-center gap-1">
+                                            10
+                                            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor">
+                                                <path d="M280-600v-80h560v80H280Zm0 160v-80h560v80H280Zm0 160v-80h560v80H280ZM160-600q-17 0-28.5-11.5T120-640q0-17 11.5-28.5T160-680q17 0 28.5 11.5T200-640q0 17-11.5 28.5T160-600Zm0 160q-17 0-28.5-11.5T120-480q0-17 11.5-28.5T160-520q17 0 28.5 11.5T200-480q0 17-11.5 28.5T160-440Zm0 160q-17 0-28.5-11.5T120-320q0-17 11.5-28.5T160-360q17 0 28.5 11.5T200-320q0 17-11.5 28.5T160-280Z"/>
+                                            </svg>
+                                        </span></a>
+                                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#1f1f1f"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#1f1f1f"><path d="M440-200h80v-167l64 64 56-57-160-160-160 160 57 56 63-63v167ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z"/></svg>
+                                    </td>
+                                    <!-- Botões de editar e remover eventos -->
                                     <td class="py-2 flex gap-2">  <a href="{{ route('events.view-edit', $event->id) }}"
                                         class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
                                         Editar </a>

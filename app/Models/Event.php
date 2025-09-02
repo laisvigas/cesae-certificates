@@ -18,4 +18,11 @@ class Event extends Model
         'start_at' => 'datetime',
         'end_at'   => 'datetime',
     ];
+
+    public function participants()
+    {
+    return $this->belongsToMany(Participant::class, 'event_participant')
+                ->withTimestamps();
+    }
+
 }
