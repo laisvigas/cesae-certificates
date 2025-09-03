@@ -43,8 +43,8 @@
                                     <td class="py-2">{{ $event->hours ?? '-' }}</td>
                                     <!-- Campo da tabela com numero de participantes e ícones clicáveis -->
                                     <td class="py-2">
-                                        <a href=""><span class="inline-flex items-center gap-1">
-                                            10
+                                        <a href="{{ route('participants.view-edit', $event, $event->id) }}"><span class="inline-flex items-center gap-1">
+                                            {{ $event->participants->count() }}
                                             <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor">
                                                 <path d="M280-600v-80h560v80H280Zm0 160v-80h560v80H280Zm0 160v-80h560v80H280ZM160-600q-17 0-28.5-11.5T120-640q0-17 11.5-28.5T160-680q17 0 28.5 11.5T200-640q0 17-11.5 28.5T160-600Zm0 160q-17 0-28.5-11.5T120-480q0-17 11.5-28.5T160-520q17 0 28.5 11.5T200-480q0 17-11.5 28.5T160-440Zm0 160q-17 0-28.5-11.5T120-320q0-17 11.5-28.5T160-360q17 0 28.5 11.5T200-320q0 17-11.5 28.5T160-280Z"/>
                                             </svg>
