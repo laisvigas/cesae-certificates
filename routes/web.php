@@ -24,24 +24,37 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
 
     // Rotas de participantes
 
-    // Participant CRUD (not tied to a single event)
+    // Global participants (not tied to an event)
     Route::prefix('participants')->group(function () {
-        Route::get('/', [ParticipantController::class, 'index'])->name('participants.index');
-        Route::get('/participant-create', [ParticipantController::class, 'createParticipant'])->name('participants.create');
-        Route::post('/participant-store', [ParticipantController::class, 'storeParticipant'])->name('participants.store');
-        Route::put('/participant-update/{participant}', [ParticipantController::class, 'update'])->name('participants.update');
-        Route::delete('/participant-delete/{participant}', [ParticipantController::class, 'deleteParticipant'])->name('participants.delete');
+        Route::get('/', [ParticipantController::class, 'indexParticipants'])->name('participants.index');
+        Route::get('/create', [ParticipantController::class, 'createParticipant'])->name('participants.create'); // NOT USED
+        Route::post('/', [ParticipantController::class, 'storeParticipant'])->name('participants.store');
+        Route::put('/{participant}', [ParticipantController::class, 'updateParticipantInfo'])->name('participants.update');
+        Route::delete('/{participant}', [ParticipantController::class, 'deleteParticipant'])->name('participants.delete');
     });
 
-    // Participants <-> Events relationship
-    Route::prefix('events/{event}/participants')->group(function () {
-        Route::get('/view-edit-participants', [ParticipantController::class, 'viewEditParticipants'])->name('participants.view-edit');
-        Route::post('/event_participant-attach/{participant}', [ParticipantController::class, 'attachParticipant'])->name('participants.attach');
-        Route::delete('/event_participant-detach/{participant}', [ParticipantController::class, 'detachParticipant'])->name('participants.detach');
-    });
+    // Event ↔ Participants
+    Route::prefix('events/{event}')->group(function () {
+        // list/edit participants in this event
+        Route::get('/participants', [ParticipantController::class, 'showParticipantsInEvent'])
+            ->name('participants.view-edit');
 
+        // create (or find) participant and attach to this event
+        Route::post('/participants/store-and-attach', [ParticipantController::class, 'storeAndAttach'])
+            ->name('participants.storeAndAttach');
+
+        // attach existing participant to this event
+        Route::post('/participants/{participant}', [ParticipantController::class, 'attachParticipantToEvent'])
+            ->name('participants.attach');
+
+        // detach participant from this event
+        Route::delete('/participants/{participant}', [ParticipantController::class, 'detachParticipant'])
+            ->name('participants.detach');
+    });
 
 });
+
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
