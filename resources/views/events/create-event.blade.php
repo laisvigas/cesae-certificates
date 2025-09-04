@@ -53,6 +53,18 @@
                                class="w-full border rounded px-3 py-2">
                     </div>
 
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Tipo de Evento *</label>
+                    <select name="event_type_id" class="w-full border rounded px-3 py-2" required>
+                        <option value="">— selecione —</option>
+                        @foreach($types as $t)
+                            <option value="{{ $t->id }}" @selected(old('event_type_id') == $t->id)>
+                                {{ $t->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                
                     <div class="pt-2">
                         <button type="submit" class="px-4 py-2 rounded bg-gray-900 text-white">
                             Criar Evento
