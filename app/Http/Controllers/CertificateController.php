@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\Participant;
+use App\Models\Certificate;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Spatie\LaravelPdf\Facades\Pdf;
 
 class CertificateController extends Controller
@@ -37,16 +39,26 @@ class CertificateController extends Controller
     // Generate PDF for event/participant
     public function certificateDownload(Event $event, Participant $participant)
     {
+        // garante que o participante pertence ao evento
+        if (! $event->participants()->whereKey($participant->id)->exists()) {
+            abort(403, 'Participante não está vinculado a este evento.');
+        }
+
+        // cria ou pega certificado existente
+        $certificate = Certificate::firstOrCreate(
+            ['event_id' => $event->id, 'participant_id' => $participant->id],
+            ['ref' => strtoupper(Str::random(12)), 'issued_at' => now()]
+        );
+
         $data = [
-            'name' => $participant->name,
+            'name'   => $participant->name,
             'course' => $event->title,
-            'date' => now()->format('d/m/Y'), // MUDAR PARA A DATA DE CONCLUSAO DO CURSO!
-            'ref' => strtoupper(uniqid()),
+            'date'   => $certificate->issued_at->format('d/m/Y'), // MUDAR PARA A DATA DE CONCLUSÃO DO EVENTO
+            'ref'    => $certificate->ref,
         ];
 
         return Pdf::view('certificates.pdf', $data)
             ->name("certificate-{$participant->name}.pdf")
             ->download();
     }
-
 }
