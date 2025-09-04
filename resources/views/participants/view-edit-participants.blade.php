@@ -30,6 +30,7 @@
                                 <th class="text-left py-2">Tipo documento</th>
                                 <th class="text-left py-2">Nº documento</th>
                                 <th class="text-left py-2">Ações</th>
+                                <th class="text-left py-2">Certificado</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -63,6 +64,17 @@
                                             </button>
                                         </form>
                                     </td>
+
+                                    <!-- Generate Certificates buttons/routes -->
+                                    <td class="py-2">
+                                        <button></button>
+                                        <a href="{{ route('certificates.download', [$event->id, $participant->id]) }}">
+                                            <button class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+                                                Baixar certificado
+                                            </button>
+                                        </a>
+                                    </td>
+
                                 </tr>
                             @endforeach
                         </tbody>

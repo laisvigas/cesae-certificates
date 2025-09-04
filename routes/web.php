@@ -1,9 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ParticipantController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\ParticipantController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -52,7 +53,18 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
             ->name('participants.detach');
     });
 
+    // Rotas de certificados
+
+    // Custom/Blank form routes
+    Route::get('/certificates/custom', [CertificateController::class, 'custom'])->name('certificates.custom');
+    Route::get('/certificates/download-custom', [CertificateController::class, 'certificateDownloadCustom'])->name('certificates.download.custom');
+
+    // Event/participant route
+    Route::get('/certificates/download/{event}/{participant}', [CertificateController::class, 'certificateDownload'])->name('certificates.download');
+
+
 });
+
 
 
 
