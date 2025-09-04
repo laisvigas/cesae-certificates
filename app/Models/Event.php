@@ -12,6 +12,7 @@ class Event extends Model
         'start_at',
         'end_at',
         'hours',
+        'event_type_id',
     ];
 
     protected $casts = [
@@ -23,6 +24,11 @@ class Event extends Model
     {
     return $this->belongsToMany(Participant::class, 'event_participant')
                 ->withTimestamps();
+    }
+
+    public function type()
+    {
+        return $this->belongsTo(\App\Models\EventType::class, 'event_type_id');
     }
 
 }
