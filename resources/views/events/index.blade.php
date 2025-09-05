@@ -4,68 +4,178 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 Lista de Eventos
             </h2>
-            <a href="{{ route('events.create') }}" class="px-3 py-2 rounded bg-gray-900 text-white text-sm">
-                Novo Evento
+            <a href="{{ route('events.create') }}" class="inline-flex items-center gap-2 px-3 py-2 rounded bg-gray-900 text-white text-sm hover:bg-gray-800">
+                <svg class="w-5 h-5" fill="currentColor" aria-hidden="true">
+                    <use href="#ms-add" />
+                </svg>
+                <span class="sm:inline hidden">Novo Evento</span>
+                <span class="sr-only">Novo Evento</span>
             </a>
         </div>
     </x-slot>
 
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white shadow rounded-lg p-6">
+                {{-- Full-bleed on mobile; rounded & roomier on ≥sm --}}
+                <div class="bg-white shadow rounded-none sm:rounded-lg p-4 sm:p-6">
 
-                @if(session('success'))
-                    <div class="mb-4 p-3 rounded border border-green-200 bg-green-50 text-green-700 text-sm">
-                        {{ session('success') }}
-                    </div>
-                @endif
+                    @if(session('success'))
+                        <div class="mb-4 p-3 rounded border border-green-200 bg-green-50 text-green-700 text-sm flex items-start gap-2">
+                            <svg class="w-5 h-5 mt-0.5" fill="currentColor" aria-hidden="true">
+                                <use href="#ms-add" />
+                            </svg>
+                            <span>{{ session('success') }}</span>
+                        </div>
+                    @endif
 
-                @if($events->isEmpty())
-                    <p class="text-gray-600">Nenhum evento cadastrado ainda.</p>
-                @else
-                    <table class="w-full border-collapse">
-                        <thead>
-                            <tr class="border-b">
-                                <th class="text-left py-2">Título</th>
-                                <th class="text-left py-2">Início</th>
-                                <th class="text-left py-2">Fim</th>
-                                <th class="text-left py-2">Horas</th>
-                                <th class="text-left py-2">Participantes</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                    @if($events->isEmpty())
+                        <p class="text-gray-600">Nenhum evento cadastrado ainda.</p>
+                    @else
+                        {{-- MOBILE: cards --}}
+                        <div class="sm:hidden space-y-3">
                             @foreach($events as $event)
-                                <tr class="border-b">
-                                    <td class="py-2">{{ $event->title }}</td>
-                                    <td class="py-2">{{ $event->start_at->format('d/m/Y H:i') }}</td>
-                                    <td class="py-2">{{ $event->end_at->format('d/m/Y H:i') }}</td>
-                                    <td class="py-2">{{ $event->hours ?? '-' }}</td>
-                                    <!-- Campo da tabela com numero de participantes e ícones clicáveis -->
-                                    <td class="py-2">
-                                        <a href="{{ route('participants.view-edit', $event, $event->id) }}"><span class="inline-flex items-center gap-1">
-                                            {{ $event->participants->count() }}
-                                            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor">
-                                                <path d="M280-600v-80h560v80H280Zm0 160v-80h560v80H280Zm0 160v-80h560v80H280ZM160-600q-17 0-28.5-11.5T120-640q0-17 11.5-28.5T160-680q17 0 28.5 11.5T200-640q0 17-11.5 28.5T160-600Zm0 160q-17 0-28.5-11.5T120-480q0-17 11.5-28.5T160-520q17 0 28.5 11.5T200-480q0 17-11.5 28.5T160-440Zm0 160q-17 0-28.5-11.5T120-320q0-17 11.5-28.5T160-360q17 0 28.5 11.5T200-320q0 17-11.5 28.5T160-280Z"/>
-                                            </svg>
-                                        </span></a>
-                                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#1f1f1f"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
-                                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#1f1f1f"><path d="M440-200h80v-167l64 64 56-57-160-160-160 160 57 56 63-63v167ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z"/></svg>
-                                    </td>
-                                    <!-- Botões de editar e remover eventos -->
-                                    <td class="py-2 flex gap-2">  <a href="{{ route('events.view-edit', $event->id) }}"
-                                        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                                        Editar </a>
-                                        <a href="{{ route('events.delete', $event->id) }}"
-                                        class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
-                                        Remover</a></td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @endif
+                                <div class="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+                                    <div class="text-sm font-semibold text-gray-900 truncate" title="{{ $event->title }}">
+                                        {{ $event->title }}
+                                    </div>
 
-            </div>
+                                    <div class="mt-1 text-xs text-gray-600">
+                                        <div><span class="font-medium">Início:</span> {{ $event->start_at->format('d/m/Y H:i') }}</div>
+                                        <div><span class="font-medium">Fim:</span> {{ $event->end_at->format('d/m/Y H:i') }}</div>
+                                        <div><span class="font-medium">Horas:</span> {{ $event->hours ?? '-' }}</div>
+                                    </div>
+
+                                    <div class="mt-2 flex items-center justify-between">
+                                        {{-- Participantes --}}
+                                        <a href="{{ route('participants.view-edit', $event, $event->id) }}"
+                                           class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-900 hover:bg-gray-200">
+                                            {{ $event->participants->count() }}
+                                            <svg class="w-4 h-4" fill="currentColor" aria-hidden="true">
+                                                <use href="#ms-list" />
+                                            </svg>
+                                            <span class="sr-only">Ver participantes</span>
+                                        </a>
+
+                                        {{-- Ações (ícones) --}}
+                                        <div class="flex items-center gap-1.5">
+                                            {{-- Adicionar participante (placeholder) --}}
+                                            <button type="button" title="Adicionar participante" aria-label="Adicionar participante"
+                                                    class="inline-flex items-center justify-center rounded border border-gray-200 p-2 text-gray-700 hover:bg-gray-50">
+                                                <svg class="w-4 h-4" fill="currentColor" aria-hidden="true">
+                                                    <use href="#ms-add" />
+                                                </svg>
+                                            </button>
+
+                                            {{-- Importar CSV (placeholder) --}}
+                                            <button type="button" title="Importar CSV" aria-label="Importar CSV"
+                                                    class="inline-flex items-center justify-center rounded border border-gray-200 p-2 text-gray-700 hover:bg-gray-50">
+                                                <svg class="w-4 h-4" fill="currentColor" aria-hidden="true">
+                                                    <use href="#ms-upload_file" />
+                                                </svg>
+                                            </button>
+
+                                            {{-- Editar --}}
+                                            <a href="{{ route('events.view-edit', $event->id) }}"
+                                               class="inline-flex items-center justify-center rounded bg-blue-600 p-2 text-white hover:bg-blue-700"
+                                               title="Editar" aria-label="Editar">
+                                                <svg class="w-4 h-4" fill="currentColor" aria-hidden="true">
+                                                    <use href="#ms-edit" />
+                                                </svg>
+                                            </a>
+
+                                            {{-- Remover --}}
+                                            <a href="{{ route('events.delete', $event->id) }}"
+                                               class="inline-flex items-center justify-center rounded bg-red-600 p-2 text-white hover:bg-red-700"
+                                               title="Remover" aria-label="Remover">
+                                                <svg class="w-4 h-4" fill="currentColor" aria-hidden="true">
+                                                    <use href="#ms-delete" />
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        {{-- DESKTOP/TABLET: table --}}
+                        <div class="hidden sm:block overflow-x-auto">
+                            <table class="w-full border-collapse text-sm">
+                                <thead>
+                                    <tr class="border-b bg-gray-50 text-gray-700">
+                                        <th class="text-left py-2 px-3">Título</th>
+                                        <th class="text-left py-2 px-3">Início</th>
+                                        <th class="text-left py-2 px-3">Fim</th>
+                                        <th class="text-left py-2 px-3">Horas</th>
+                                        <th class="text-left py-2 px-3">Participantes</th>
+                                        <th class="py-2 px-3 w-px">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($events as $event)
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-2 px-3 truncate" title="{{ $event->title }}">{{ $event->title }}</td>
+                                            <td class="py-2 px-3">{{ $event->start_at->format('d/m/Y H:i') }}</td>
+                                            <td class="py-2 px-3">{{ $event->end_at->format('d/m/Y H:i') }}</td>
+                                            <td class="py-2 px-3">{{ $event->hours ?? '-' }}</td>
+
+                                            {{-- Participantes --}}
+                                            <td class="py-2 px-3">
+                                                <a href="{{ route('participants.view-edit', $event, $event->id) }}"
+                                                   class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-900 hover:bg-gray-200">
+                                                    {{ $event->participants->count() }}
+                                                    <svg class="w-5 h-5" fill="currentColor" aria-hidden="true">
+                                                        <use href="#ms-list" />
+                                                    </svg>
+                                                    <span class="sr-only">Ver participantes</span>
+                                                </a>
+                                            </td>
+
+                                            {{-- Ações (todos os botões juntos) --}}
+                                            <td class="py-2 px-3">
+                                                <div class="flex justify-end gap-2">
+                                                    {{-- Adicionar participante (placeholder) --}}
+                                                    <button type="button" title="Adicionar participante" aria-label="Adicionar participante"
+                                                            class="inline-flex items-center justify-center rounded border border-gray-200 p-2 text-gray-700 hover:bg-gray-50">
+                                                        <svg class="w-5 h-5" fill="currentColor" aria-hidden="true">
+                                                            <use href="#ms-add" />
+                                                        </svg>
+                                                    </button>
+
+                                                    {{-- Importar CSV (placeholder) --}}
+                                                    <button type="button" title="Importar CSV" aria-label="Importar CSV"
+                                                            class="inline-flex items-center justify-center rounded border border-gray-200 p-2 text-gray-700 hover:bg-gray-50">
+                                                        <svg class="w-5 h-5" fill="currentColor" aria-hidden="true">
+                                                            <use href="#ms-upload_file" />
+                                                        </svg>
+                                                    </button>
+
+                                                    {{-- Editar --}}
+                                                    <a href="{{ route('events.view-edit', $event->id) }}"
+                                                       class="inline-flex items-center justify-center rounded bg-blue-600 p-2 text-white hover:bg-blue-700"
+                                                       title="Editar" aria-label="Editar">
+                                                        <svg class="w-5 h-5" fill="currentColor" aria-hidden="true">
+                                                            <use href="#ms-edit" />
+                                                        </svg>
+                                                    </a>
+
+                                                    {{-- Remover --}}
+                                                    <a href="{{ route('events.delete', $event->id) }}"
+                                                       class="inline-flex items-center justify-center rounded bg-red-600 p-2 text-white hover:bg-red-700"
+                                                       title="Remover" aria-label="Remover">
+                                                        <svg class="w-5 h-5" fill="currentColor" aria-hidden="true">
+                                                            <use href="#ms-delete" />
+                                                        </svg>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+
+                </div>
         </div>
     </div>
 </x-app-layout>
