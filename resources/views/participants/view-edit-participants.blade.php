@@ -1,4 +1,7 @@
 <x-app-layout>
+
+    @vite(['resources/js/certificates.js'])
+
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -65,20 +68,51 @@
                                         </form>
                                     </td>
 
-                                    <!-- Generate Certificates buttons/routes -->
-                                    <td class="py-2">
-                                        <button></button>
+                                    <!-- Certificate Buttons -->
+                                    <td class="py-2 flex gap-2">
+
+                                        <!-- Download certificate  -->
                                         <a href="{{ route('certificates.download', [$event->id, $participant->id]) }}">
                                             <button class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
                                                 Baixar certificado
                                             </button>
                                         </a>
+
+                                        <!-- Send certificate by email (uses js) -->
+                                        <!-- Obs: data-cert-email is a custom HTML attribute, often called a data- attribute.
+                                            In HTML5, you can define custom attributes that start with data- to store extra
+                                            information on html elements. The browser ignores them by default,
+                                            but JavaScript can read them easily. -->
+                                        <button
+                                            type="button"
+                                            class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                            data-cert-email
+                                            data-participant-id="{{ $participant->id }}"
+                                            data-participant-name="{{ $participant->name }}"
+                                            data-participant-email="{{ $participant->email }}"
+                                            data-event-id="{{ $event->id }}"
+                                            data-event-title="{{ $event->title }}"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#1f1f1f"><path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm320-280L160-640v400h640v-400L480-440Zm0-80 320-200H160l320 200ZM160-640v-80 480-400Z"/></svg>
+                                        </button>
+
                                     </td>
+
 
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
+
+                    <!-- Hidden form for sending certificate by email -->
+                    <form id="certificate-email-form" action="{{ route('certificates.send') }}" method="POST" style="display:none;">
+                        @csrf
+                        <input type="hidden" name="name">
+                        <input type="hidden" name="course" value="Course">
+                        <input type="hidden" name="date" value="{{ date('Y-m-d') }}">
+                        <input type="hidden" name="email">
+                    </form>
+
                 @endif
 
                 <!-- Add Participant Form -->
