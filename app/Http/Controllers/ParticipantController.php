@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Participant;
 use App\Models\Event;
+use App\Models\Participant;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class ParticipantController extends Controller
 {
@@ -24,7 +25,7 @@ class ParticipantController extends Controller
     }
 
 
-    public function createParticipant() // not needed
+    public function createParticipant() // not used (used storeAndAttach instead)
     {
         return;
     }
@@ -37,7 +38,7 @@ class ParticipantController extends Controller
     }
 
 
-    public function storeParticipant(Request $request) // Store a new participant
+    public function storeParticipant(Request $request) // not used (used storeAndAttach instead)
     {
         $participantData = $request->validate([
             'name' => 'required|string|max:255',
@@ -66,7 +67,7 @@ class ParticipantController extends Controller
                          ->with('success', 'Participantes adicionados com sucesso!');
     }
 
-    public function storeAndAttach(Request $request, $eventId) // search for a participant and attach it a to an event. If the participant dosnt exist, create it
+    public function storeAndAttach(Request $request, $eventId) // search for a participant and attach it a to an event. If the participant doesnt exist, create it
     {
     $validated = $request->validate([
         'name' => 'required|string',
@@ -112,6 +113,66 @@ class ParticipantController extends Controller
     $participant->update($validated);
 
     return back()->with('success', 'Participante atualizado.');
+    }
+
+    // Imports a csv file with participants data to attach to an event
+        // Obs: Validator::make() is native to Laravel.
+        // It builds a validator instance for an array of data against a set of rules.
+        // make($data, $rules, $messages = [], $customAttributes = [])
+        // It works the same way as the $request->validate() method we already used to validate data
+        // in a request. But, in our CSV import we can’t use $request->validate() directly
+        // because each line isn’t a request. So, that’s why we need to create
+        // a Valitador for each row of the cvs
+    public function importCsv(Request $request, Event $event)
+    {
+        $request->validate([
+            'csv_file' => 'required|mimes:csv,txt|max:2048',
+        ]);
+
+        $file = $request->file('csv_file');
+        $handle = fopen($file->getPathname(), 'r');
+
+        $header = fgetcsv($handle, 1000, ','); // First row (headers)
+        $imported = 0;
+
+        while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+            $data = array_combine($header, $row);
+
+            // Example expected headers: name,email,phone,address,document_type,document_number
+            $validator = Validator::make($data, [
+                'name'            => 'required|string|max:255',
+                'email'           => 'required|email',
+                'phone'           => 'nullable|string',
+                'address'         => 'nullable|string',
+                'document_type'   => 'nullable|string',
+                'document_number' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                continue; // skip invalid row
+            }
+
+            // Find or create participant
+            $participant = Participant::firstOrCreate(
+                ['email' => $data['email']], // unique by email
+                [
+                    'name'            => $data['name'],
+                    'phone'           => $data['phone'] ?? null,
+                    'address'         => $data['address'] ?? null,
+                    'document_type'   => $data['document_type'] ?? null,
+                    'document_number' => $data['document_number'] ?? null,
+                ]
+            );
+
+            // Attach to event (avoid duplicate with syncWithoutDetaching)
+            $event->participants()->syncWithoutDetaching([$participant->id]);
+
+            $imported++;
+        }
+
+        fclose($handle);
+
+        return back()->with('success', "$imported participantes importados com sucesso.");
     }
 
 

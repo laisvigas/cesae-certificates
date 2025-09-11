@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Mail\CertificateMail;
 use Spatie\LaravelPdf\Facades\Pdf;
-use Barryvdh\DomPDF\Facade\Pdf as Dompdf; // Using an alias for the new  Dompdf package to differentiate it from Spatie
+use Barryvdh\DomPDF\Facade\Pdf as Dompdf; // Using an alias for the Dompdf package to differentiate it from Spatie
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
@@ -20,85 +20,174 @@ class CertificateController extends Controller
     public function custom()
     {
 
-        return view('certificates.custom');
+        $events = Event::with('participants')->orderBy('start_at', 'desc')->get(); // Pass all the events and participants in each event. Needed for the dropdown menu on the custom.blade-php
+
+        return view('certificates.custom', compact('events'));
     }
 
-    // Generate PDF from custom form
-    public function certificateDownloadCustom(Request $request)
-    {
-        $data = [
-            'name' => $request->input('name', 'Nome Exemplo'),
-            'course' => $request->input('course', 'Curso Exemplo'),
-            'date' => $request->input('date', now()->format('d/m/Y')),
-            'ref' => strtoupper(uniqid()), // gera um numero único para autenticação (podemos melhorar isso no futuro com um QR code)
-        ];
 
+    // ------------ FUNCTIONS USED IN THE VIEW-EDIT-PARTICIPANTS BLADE: ------------
 
-
-        return Pdf::view('certificates.pdf', $data)
-            ->name('custom_certificate.pdf')
-            ->download();
-    }
-
-    // Generate PDF for event/participant
+    // Generate/find and download PDF for a participant in an event
     public function certificateDownload(Event $event, Participant $participant)
     {
-        // garante que o participante pertence ao evento
         if (! $event->participants()->whereKey($participant->id)->exists()) {
             abort(403, 'Participante não está vinculado a este evento.');
         }
 
-        // cria ou pega certificado existente
         $certificate = Certificate::firstOrCreate(
             ['event_id' => $event->id, 'participant_id' => $participant->id],
             ['ref' => strtoupper(Str::random(12)), 'issued_at' => now()]
         );
 
         $data = [
-            'name'   => $participant->name,
+            'name' => $participant->name,
             'course' => $event->title,
-            'date'   => $certificate->issued_at->format('d/m/Y'), // MUDAR PARA A DATA DE CONCLUSÃO DO EVENTO
-            'ref'    => $certificate->ref,
+            'date' => $event->end_at->format('d/m/Y'),
+            'ref' => $certificate->ref,
         ];
 
-        return Pdf::view('certificates.pdf', $data)
-            ->name("certificate-{$participant->name}.pdf")
-            ->download();
-    }
+        $pdf = Dompdf::loadView('certificates.pdf', $data)->output();
 
-    public function sendCertificate(Request $request) // Não funvionava com Spatie, agora funciona com Dompdf
-    {
-        $data = $request->validate([
-            'name' => 'required|string',
-            'course' => 'required|string',
-            'date' => 'required|date',
-            'email' => 'required|email',
-        ]);
-
-        // Generate the PDF content in memory using the Dompdf facade.
-        $pdfContent = Dompdf::loadView('certificates.pdf', $data)->output();
-
-        // Send email with the in-memory PDF content.
-        Mail::to($data['email'])->send(new CertificateMail($pdfContent, $data['name']));
-
-        return back()->with('success', 'Certificado enviado com sucesso para ' . $data['email']);
+        return response()->streamDownload(
+            fn() => print($pdf),
+            "certificate-{$participant->name}.pdf"
+        );
     }
 
 
-    public function sendCustom(Request $request) // AINDA NÃO FUNCIONA
+    // Generate/find and send participant certificate by email
+    public function sendCertificate(Request $request)
     {
         $data = $request->validate([
-            'name' => 'required|string',
-            'course' => 'required|string',
-            'date' => 'required|date',
+            'participant_id' => 'required|exists:participants,id',
+            'event_id' => 'required|exists:events,id',
+        ]);
+
+        $participant = Participant::findOrFail($data['participant_id']);
+        $event = Event::findOrFail($data['event_id']);
+
+        // Create or get existing certificate
+        $certificate = Certificate::firstOrCreate(
+            ['event_id' => $event->id, 'participant_id' => $participant->id],
+            ['ref' => strtoupper(Str::random(12)), 'issued_at' => now()]
+        );
+
+        $pdfData = [
+            'name' => $participant->name,
+            'course' => $event->title,
+            'date' => $event->end_at->format('d/m/Y'),
+            'ref' => $certificate->ref,
+        ];
+
+        $pdf = Dompdf::loadView('certificates.pdf', $pdfData)->output();
+
+        Mail::to($participant->email)->send(new CertificateMail($pdf, $participant->name));
+
+        return back()->with('success', 'Certificado enviado com sucesso para ' . $participant->email);
+    }
+
+    // Do a loop on the previous function and
+    // send a certificate by email to each and all participants in the event
+    // (there is a different, specific route do call for it)
+    public function sendAll(Event $event)
+    {
+        $participants = $event->participants;
+
+        if ($participants->isEmpty()) {
+            return back()->with('error', 'Não há participantes para este evento.');
+        }
+
+        foreach ($participants as $participant) {
+            // tries to find an existing certificate for the participant. If it cant find one, creates one
+            $certificate = Certificate::firstOrCreate(
+                ['event_id' => $event->id, 'participant_id' => $participant->id],
+                ['ref' => strtoupper(Str::random(12)), 'issued_at' => now()]
+            );
+
+            // Data for the PDF
+            $pdfData = [
+                'name'  => $participant->name,
+                'course'=> $event->title,
+                'date'  => $event->end_at->format('d/m/Y'),
+                'ref'   => $certificate->ref,
+            ];
+
+            // Generate PDF
+            $pdf = Dompdf::loadView('certificates.pdf', $pdfData)->output();
+
+            // Send email if participant has a valid email
+            if (!empty($participant->email)) {
+                Mail::to($participant->email)->send(new CertificateMail($pdf, $participant->name));
+            }
+        }
+
+        return back()->with('success', 'Certificados enviados com sucesso para todos os participantes.');
+    }
+
+
+    // ------------ FUNCTIONS USED IN THE CUSTOM BLADE: ------------
+
+    // Generate and download PDF from custom form
+    public function certificateDownloadCustom(Request $request)
+    {
+        $data = $request->validate([
+            'event_id' => 'required|exists:events,id',
+            'participant_id' => 'required|exists:participants,id',
+        ]);
+
+        $event = Event::findOrFail($data['event_id']);
+        $participant = Participant::findOrFail($data['participant_id']);
+
+        $certificate = Certificate::firstOrCreate(
+            ['event_id' => $event->id, 'participant_id' => $participant->id],
+            ['ref' => strtoupper(Str::random(12)), 'issued_at' => now()]
+        );
+
+        $pdfData = [
+            'name' => $participant->name,
+            'course' => $event->title,
+            'date' => $event->end_at->format('d/m/Y'),
+            'ref' => $certificate->ref,
+        ];
+
+        $pdf = Dompdf::loadView('certificates.pdf', $pdfData)->output();
+
+        return response()->streamDownload(
+            fn() => print($pdf),
+            "certificate-{$participant->name}.pdf"
+        );
+    }
+
+
+    // Generates PDF and send it to the email provided on the custom form
+    public function sendCustom(Request $request)
+    {
+        $data = $request->validate([
+            'event_id' => 'required|exists:events,id',
+            'participant_id' => 'required|exists:participants,id',
             'email' => 'required|email',
         ]);
 
-        // Generate PDF with Spatie
-        $pdf = Pdf::view('certificates.pdf', $data)->output();
+        $event = Event::findOrFail($data['event_id']);
+        $participant = Participant::findOrFail($data['participant_id']);
 
-        // Send email
-        Mail::to($data['email'])->send(new CertificateMail($pdf, $data['name']));
+        // Create or get existing certificate
+        $certificate = Certificate::firstOrCreate(
+            ['event_id' => $event->id, 'participant_id' => $participant->id],
+            ['ref' => strtoupper(Str::random(12)), 'issued_at' => now()]
+        );
+
+        $pdfData = [
+            'name' => $participant->name,
+            'course' => $event->title,
+            'date' => $event->end_at->format('d/m/Y'),
+            'ref' => $certificate->ref,
+        ];
+
+        $pdf = Dompdf::loadView('certificates.pdf', $pdfData)->output();
+
+        Mail::to($data['email'])->send(new CertificateMail($pdf, $participant->name));
 
         return back()->with('success', 'Certificado enviado com sucesso para ' . $data['email']);
     }

@@ -10,49 +10,81 @@
         </div>
     </x-slot>
 
+    <!-- Success message -->
+    @if (session('success'))
+        <div class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-100 border border-green-300" role="alert">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    <!-- Error message -->
+    @if ($errors->any())
+        <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-100 border border-red-300" role="alert">
+            <ul class="list-disc pl-5">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+
+    <!-- Download / send by email form -->
+    <!-- Obs:
+        -> method on <form> sets the default HTTP method for the whole form.
+            Every submit button will use that method, unless overridden.
+        -> formmethod on <button> let us override the method per button, without duplicating the form.
+            The same is true for formaction.
+            This way we can have one form, two buttins with two different methods (and avoid having to duplicate the input data) -->
     <div class="p-6 space-y-6">
-        <!-- Download Form -->
-        <form id="downloadForm" action="{{ route('certificates.download.custom') }}" method="GET" class="space-y-4">
+        <form id="certificateForm" method="POST">
             @csrf
 
+            <!-- Event -->
+            <!-- Obs: the data-participants attribute takes and converts the selected event data
+                    (including its participants) into a JSON file,
+                    which is then passed to the JavaScript EventListener.
+                    The EventListener then filters the participants that
+                    will be shown in the "Selecione um participante" dropdown menu below  -->
             <div>
-                <label class="block font-medium">Nome</label>
-                <input type="text" id="name" name="name" class="border rounded w-full p-2" placeholder="Nome do participante" required>
+                <label class="block font-medium">Evento</label>
+                <select name="event_id" id="event_id" class="border rounded w-full p-2" required
+                        data-participants='@json($events->mapWithKeys(fn($e) => [$e->id => $e->participants->map(fn($p) => ['id'=>$p->id,'name'=>$p->name])]))'>
+                    <option value="">Selecione um evento</option>
+                    @foreach($events as $event)
+                        <option value="{{ $event->id }}">{{ $event->title }} ({{ $event->end_at->format('d/m/Y') }})</option>
+                    @endforeach
+                </select>
             </div>
 
+            <!-- Participant -->
             <div>
-                <label class="block font-medium">Curso/Programa</label>
-                <input type="text" id="course" name="course" class="border rounded w-full p-2" placeholder="Nome do curso" required>
+                <label class="block font-medium">Participante</label>
+                <select name="participant_id" id="participant_id" class="border rounded w-full p-2" required>
+                    <option value="">Selecione um participante</option>
+                    <!-- Options populated dynamically via JS -->
+                </select>
             </div>
 
-            <div>
-                <label class="block font-medium">Data</label>
-                <input type="date" id="date" name="date" class="border rounded w-full p-2" required>
-            </div>
-
-            <div>
-                <button type="submit" class="px-4 py-2 bg-gray-900 text-white rounded">
-                    Baixar certificado
-                </button>
-            </div>
-        </form>
-
-        <!-- Send Email Form -->
-        <form id="emailForm" action="{{ route('certificates.send.custom') }}" method="POST" class="space-y-4">
-            @csrf
-
+            <!-- Email -->
             <div>
                 <label class="block font-medium">Email do destinatário</label>
-                <input type="email" id="email" name="email" class="border rounded w-full p-2" placeholder="Digite o email do participante" required>
+                <input type="email" name="email" class="border rounded w-full p-2" placeholder="Digite o email do participante">
             </div>
 
-            <!-- Hidden inputs that will be auto-filled with javascrip (to copy the custom form’s fields into the email form automatically) -->
-            <input type="hidden" id="email_name" name="name">
-            <input type="hidden" id="email_course" name="course">
-            <input type="hidden" id="email_date" name="date">
+            <!-- Buttons -->
+            <div class="flex space-x-4 mt-4">
+                <button type="submit"
+                        formaction="{{ route('certificates.download.custom') }}"
+                        formmethod="GET"
+                        class="px-4 py-2 bg-gray-900 text-white rounded">
+                    Baixar certificado
+                </button>
 
-            <div>
-                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                <button type="submit"
+                        formaction="{{ route('certificates.send.custom') }}"
+                        formmethod="POST"
+                        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
                     Enviar certificado por email
                 </button>
             </div>
