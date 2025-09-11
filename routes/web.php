@@ -5,6 +5,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\ParticipantController;
+use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -12,7 +13,9 @@ Route::get('/', function () {
 
 // Painel (só admin/staff)
 Route::middleware(['auth', 'role:admin,staff'])->group(function () {
-    Route::get('/dashboard', fn () => view('dashboard'))->name('dashboard');
+    Route::get('/dashboard', DashboardController::class)
+        ->middleware(['verified'])
+        ->name('dashboard');
 
     // Rotas de eventos
     Route::get('/events', [EventController::class, 'indexEvent'])->name('events.index');
