@@ -25,4 +25,8 @@ class Participant extends Model
                     ->withTimestamps();
     }
 
+    public function certificates()
+    {
+        return $this->hasMany(Certificate::class);
+    }
 }
