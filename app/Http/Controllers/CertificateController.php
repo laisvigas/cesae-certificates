@@ -3,11 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
-use App\Models\Participant;
 use App\Models\Certificate;
-use Illuminate\Http\Request;
+use App\Models\Participant;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Mail\CertificateMail;
 use Spatie\LaravelPdf\Facades\Pdf;
+use Barryvdh\DomPDF\Facade\Pdf as Dompdf; // Using an alias for the new  Dompdf package to differentiate it from Spatie
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class CertificateController extends Controller
 {
@@ -61,4 +65,44 @@ class CertificateController extends Controller
             ->name("certificate-{$participant->name}.pdf")
             ->download();
     }
+
+    public function sendCertificate(Request $request) // Não funvionava com Spatie, agora funciona com Dompdf
+    {
+        $data = $request->validate([
+            'name' => 'required|string',
+            'course' => 'required|string',
+            'date' => 'required|date',
+            'email' => 'required|email',
+        ]);
+
+        // Generate the PDF content in memory using the Dompdf facade.
+        $pdfContent = Dompdf::loadView('certificates.pdf', $data)->output();
+
+        // Send email with the in-memory PDF content.
+        Mail::to($data['email'])->send(new CertificateMail($pdfContent, $data['name']));
+
+        return back()->with('success', 'Certificado enviado com sucesso para ' . $data['email']);
+    }
+
+
+    public function sendCustom(Request $request) // AINDA NÃO FUNCIONA
+    {
+        $data = $request->validate([
+            'name' => 'required|string',
+            'course' => 'required|string',
+            'date' => 'required|date',
+            'email' => 'required|email',
+        ]);
+
+        // Generate PDF with Spatie
+        $pdf = Pdf::view('certificates.pdf', $data)->output();
+
+        // Send email
+        Mail::to($data['email'])->send(new CertificateMail($pdf, $data['name']));
+
+        return back()->with('success', 'Certificado enviado com sucesso para ' . $data['email']);
+    }
+
+
+
 }

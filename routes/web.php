@@ -55,12 +55,18 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
 
     // Rotas de certificados
 
-    // Custom/Blank form routes
+    // Custom certificate form routes
     Route::get('/certificates/custom', [CertificateController::class, 'custom'])->name('certificates.custom');
     Route::get('/certificates/download-custom', [CertificateController::class, 'certificateDownloadCustom'])->name('certificates.download.custom');
 
-    // Event/participant route
+    // Event/participant certificate route
     Route::get('/certificates/download/{event}/{participant}', [CertificateController::class, 'certificateDownload'])->name('certificates.download');
+
+    // send certificate pdf by email routes
+    Route::post('/certificates/send', [CertificateController::class, 'sendCertificate'])->name('certificates.send');
+    Route::post('/certificates/send/custom', [CertificateController::class, 'sendCustom'])->name('certificates.send.custom');
+
+
 
 
 });
