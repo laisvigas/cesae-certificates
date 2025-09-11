@@ -9,31 +9,27 @@ use Illuminate\Support\Carbon;
 
 class DashboardController extends Controller
 {
-    public function __invoke()
+public function __invoke()
     {
-        $now = now(); 
+        $now = now();
 
-        // Participantes cadastrados na base
         $allParticipantsCount = $this->participantsRegisteredCount();
+        $certificatesCount    = $this->certificatesIssuedCount($now);
 
-        // Certificados emitidos até hoje
-        $certificatesCount = $this->certificatesIssuedCount($now);
+        // Eventos já realizados (terminaram antes de agora)
+        $pastEventsCount = $this->eventsUntilTodayCount($now);
 
-        // Total de eventos até hoje
-        $eventsCount = $this->eventsUntilTodayCount($now);
+        // Eventos futuros (ainda vão começar)
+        $futureEventsCount = $this->futureEventsCount($now);
 
         return view('dashboard', [
             'allParticipantsCount' => $allParticipantsCount,
-            'certificatesCount' => $certificatesCount,
-            'eventsCount' => $eventsCount,
+            'certificatesCount'    => $certificatesCount,
+            'pastEventsCount'      => $pastEventsCount,
+            'futureEventsCount'    => $futureEventsCount,
         ]);
     }
 
-
-
-    /**
-     * Total de certificados emitidos até hoje.
-     */
     private function certificatesIssuedCount(Carbon $now): int
     {
         return Certificate::whereNotNull('issued_at')
@@ -41,22 +37,26 @@ class DashboardController extends Controller
             ->count();
     }
 
+    // Realizados: já terminaram
     private function eventsUntilTodayCount(Carbon $now): int
     {
         return Event::whereNotNull('end_at')
-        ->where('end_at', '<=', $now)
-        ->count();
+            ->where('end_at', '<', $now)
+            ->count();
     }
 
+    // Marcados / futuros: ainda vão começar
+    private function futureEventsCount(Carbon $now): int
+    {
+        return Event::whereNotNull('start_at')
+            ->where('start_at', '>=', $now)
+            ->count();
+    }
 
-    /**
-     * Total de pessoas cadastradas (independe de participação).
-     */
     private function participantsRegisteredCount(): int
     {
         return Participant::count();
     }
-
 
     /**
      * Lista de quem já participou – útil para uma tela futura. | NÃO ESTÁ SENDO USADO AINDA
