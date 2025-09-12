@@ -35,98 +35,147 @@ class DevDemoSeeder extends Seeder
             EventType::firstOrCreate(['id' => $id], ['name' => $name]);
         }
 
-        // Create example events
+        // Datas base para consistência
+        $now = now();
+
+        // Create example events (passados, a decorrer e futuros)
         $events = [
+            // ------------------ PASSADOS ------------------
             [
-                'title' => 'Workshop Laravel',
-                'start_at' => now()->addDays(5),
-                'end_at'   => now()->addDays(5)->addHours(3),
-                'hours'    => 3,
+                'title'         => 'Workshop Docker Essentials (2024)',
+                'start_at'      => $now->copy()->subDays(120)->setTime(9, 0),
+                'end_at'        => $now->copy()->subDays(120)->setTime(12, 0),
+                'hours'         => 3,
+                'event_type_id' => 1, // Workshop
+            ],
+            [
+                'title'         => 'Palestra Segurança de API (2024)',
+                'start_at'      => $now->copy()->subDays(45)->setTime(18, 0),
+                'end_at'        => $now->copy()->subDays(45)->setTime(20, 0),
+                'hours'         => 2,
+                'event_type_id' => 3, // Palestra
+            ],
+            // ------------------ A DECORRER ------------------
+            [
+                'title'         => 'Formação UX Sprint (a decorrer)',
+                'start_at'      => $now->copy()->subHours(2),
+                'end_at'        => $now->copy()->addHours(6),
+                'hours'         => 8,
+                'event_type_id' => 2, // Formação
+            ],
+            [
+                'title'         => 'Curso Intensivo Data Science (a decorrer)',
+                'start_at'      => $now->copy()->subDays(2)->setTime(9, 0),
+                'end_at'        => $now->copy()->addDays(3)->setTime(17, 0),
+                'hours'         => 40,
+                'event_type_id' => 5, // Curso
+            ],
+            // ------------------ FUTUROS (os teus + alguns) ------------------
+            [
+                'title'         => 'Workshop Laravel',
+                'start_at'      => $now->copy()->addDays(5),
+                'end_at'        => $now->copy()->addDays(5)->addHours(3),
+                'hours'         => 3,
                 'event_type_id' => 1,
             ],
             [
-                'title' => 'Palestra sobre Segurança',
-                'start_at' => now()->addDays(10),
-                'end_at'   => now()->addDays(10)->addHours(2),
-                'hours'    => 2,
+                'title'         => 'Palestra sobre Segurança',
+                'start_at'      => $now->copy()->addDays(10),
+                'end_at'        => $now->copy()->addDays(10)->addHours(2),
+                'hours'         => 2,
                 'event_type_id' => 3,
             ],
             [
-                'title' => 'Curso de PHP Moderno',
-                'start_at' => now()->addDays(15),
-                'end_at'   => now()->addDays(20),
-                'hours'    => 20,
+                'title'         => 'Curso de PHP Moderno',
+                'start_at'      => $now->copy()->addDays(15),
+                'end_at'        => $now->copy()->addDays(20),
+                'hours'         => 20,
                 'event_type_id' => 5,
             ],
             [
-                'title' => 'Workshop React Avançado',
-                'start_at' => now()->addDays(7),
-                'end_at'   => now()->addDays(7)->addHours(4),
-                'hours'    => 4,
+                'title'         => 'Workshop React Avançado',
+                'start_at'      => $now->copy()->addDays(7),
+                'end_at'        => $now->copy()->addDays(7)->addHours(4),
+                'hours'         => 4,
                 'event_type_id' => 1,
             ],
             [
-                'title' => 'Formação DevOps Básico',
-                'start_at' => now()->addDays(12),
-                'end_at'   => now()->addDays(14),
-                'hours'    => 16,
+                'title'         => 'Formação DevOps Básico',
+                'start_at'      => $now->copy()->addDays(12),
+                'end_at'        => $now->copy()->addDays(14),
+                'hours'         => 16,
                 'event_type_id' => 2,
             ],
             [
-                'title' => 'Webinar sobre Cloud',
-                'start_at' => now()->addDays(8),
-                'end_at'   => now()->addDays(8)->addHours(2),
-                'hours'    => 2,
+                'title'         => 'Webinar sobre Cloud',
+                'start_at'      => $now->copy()->addDays(8),
+                'end_at'        => $now->copy()->addDays(8)->addHours(2),
+                'hours'         => 2,
                 'event_type_id' => 4,
             ],
             [
-                'title' => 'Curso de Python para Dados',
-                'start_at' => now()->addDays(18),
-                'end_at'   => now()->addDays(25),
-                'hours'    => 30,
+                'title'         => 'Curso de Python para Dados',
+                'start_at'      => $now->copy()->addDays(18),
+                'end_at'        => $now->copy()->addDays(25),
+                'hours'         => 30,
                 'event_type_id' => 5,
             ],
             [
-                'title' => 'Palestra sobre IA Generativa',
-                'start_at' => now()->addDays(20),
-                'end_at'   => now()->addDays(20)->addHours(3),
-                'hours'    => 3,
+                'title'         => 'Palestra sobre IA Generativa',
+                'start_at'      => $now->copy()->addDays(20),
+                'end_at'        => $now->copy()->addDays(20)->addHours(3),
+                'hours'         => 3,
                 'event_type_id' => 3,
             ],
             [
-                'title' => 'Workshop Git & GitHub',
-                'start_at' => now()->addDays(3),
-                'end_at'   => now()->addDays(3)->addHours(2),
-                'hours'    => 2,
+                'title'         => 'Workshop Git & GitHub',
+                'start_at'      => $now->copy()->addDays(3),
+                'end_at'        => $now->copy()->addDays(3)->addHours(2),
+                'hours'         => 2,
                 'event_type_id' => 1,
             ],
             [
-                'title' => 'Webinar Introdução ao Docker',
-                'start_at' => now()->addDays(6),
-                'end_at'   => now()->addDays(6)->addHours(2),
-                'hours'    => 2,
+                'title'         => 'Webinar Introdução ao Docker',
+                'start_at'      => $now->copy()->addDays(6),
+                'end_at'        => $now->copy()->addDays(6)->addHours(2),
+                'hours'         => 2,
                 'event_type_id' => 4,
             ],
             [
-                'title' => 'Formação Segurança em Redes',
-                'start_at' => now()->addDays(30),
-                'end_at'   => now()->addDays(32),
-                'hours'    => 16,
+                'title'         => 'Formação Segurança em Redes',
+                'start_at'      => $now->copy()->addDays(30),
+                'end_at'        => $now->copy()->addDays(32),
+                'hours'         => 16,
                 'event_type_id' => 2,
             ],
             [
-                'title' => 'Curso Frontend Completo',
-                'start_at' => now()->addDays(40),
-                'end_at'   => now()->addDays(50),
-                'hours'    => 40,
+                'title'         => 'Curso Frontend Completo',
+                'start_at'      => $now->copy()->addDays(40),
+                'end_at'        => $now->copy()->addDays(50),
+                'hours'         => 40,
                 'event_type_id' => 5,
+            ],
+            // ------------------ FUTUROS SEM PARTICIPANTES ------------------
+            [
+                'title'         => 'Webinar Observabilidade com OpenTelemetry (sem participantes)',
+                'start_at'      => $now->copy()->addDays(9)->setTime(18, 30),
+                'end_at'        => $now->copy()->addDays(9)->setTime(20, 0),
+                'hours'         => 2,
+                'event_type_id' => 4,
+            ],
+            [
+                'title'         => 'Workshop Design Systems (sem participantes)',
+                'start_at'      => $now->copy()->addDays(11)->setTime(9, 0),
+                'end_at'        => $now->copy()->addDays(11)->setTime(12, 0),
+                'hours'         => 3,
+                'event_type_id' => 1,
             ],
         ];
 
         $eventModels = [];
         foreach ($events as $e) {
             $eventModels[] = Event::firstOrCreate(
-                ['title' => $e['title']],
+                ['title' => $e['title']], // chave única por título
                 $e
             );
         }
@@ -162,8 +211,18 @@ class DevDemoSeeder extends Seeder
             $participants[] = Participant::firstOrCreate(['email' => $email], ['name' => $name]);
         }
 
-        // Link participants to events
-        foreach ($eventModels as $index => $event) {
+        // Títulos que NÃO receberão participantes
+        $noParticipantsTitles = [
+            'Webinar Observabilidade com OpenTelemetry (sem participantes)',
+            'Workshop Design Systems (sem participantes)',
+        ];
+
+        // Link participants to events (3 a 6 participantes por evento), exceto os sem participantes
+        foreach ($eventModels as $event) {
+            if (in_array($event->title, $noParticipantsTitles, true)) {
+                continue; // deixa sem participantes
+            }
+
             $assigned = collect($participants)->random(rand(3, 6))->pluck('id')->toArray();
             $event->participants()->syncWithoutDetaching($assigned);
         }
