@@ -84,6 +84,10 @@
                 <x-responsive-nav-link :href="route('events.index')" :active="request()->routeIs('events.*')">
                     {{ __('Eventos') }}
                 </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('certificates.custom')" :active="request()->routeIs('certificates.*')">
+                    {{ __('Gerar Certificado') }}
+                </x-responsive-nav-link>
             @endif
         </div>
 
