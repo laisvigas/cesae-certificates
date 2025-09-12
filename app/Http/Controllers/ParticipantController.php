@@ -67,20 +67,36 @@ class ParticipantController extends Controller
                          ->with('success', 'Participantes adicionados com sucesso!');
     }
 
-    public function storeAndAttach(Request $request, $eventId) // search for a participant and attach it a to an event. If the participant doesnt exist, create it
-    {
+public function storeAndAttach(Request $request, $eventId) 
+// Search for a participant and attach it to an event. 
+// If the participant doesn't exist, create it. If it exists, update optional fields.
+{
     $validated = $request->validate([
-        'name' => 'required|string',
-        'email' => 'required|email',
+        'name'            => 'required|string|max:255',
+        'email'           => 'required|email|max:255',
+        'phone'           => 'nullable|string|max:50',
+        'address'         => 'nullable|string|max:255',
+        'document_type'   => 'nullable|string|max:100',
+        'document_number' => 'nullable|string|max:100',
     ]);
 
     $event = Event::findOrFail($eventId);
 
-    // Check if participant exists. If doesnt, create it
+    // Check if participant exists. If not, create it
     $participant = Participant::firstOrCreate(
         ['email' => $validated['email']],
-        ['name' => $validated['name']]
+        [
+            'name'            => $validated['name'],
+            'phone'           => $validated['phone'] ?? null,
+            'address'         => $validated['address'] ?? null,
+            'document_type'   => $validated['document_type'] ?? null,
+            'document_number' => $validated['document_number'] ?? null,
+        ]
     );
+
+    // If participant already existed, update optional fields
+    $participant->fill($validated);
+    $participant->save();
 
     // Attach participant to event if not already attached
     if (!$event->participants->contains($participant->id)) {
@@ -88,7 +104,8 @@ class ParticipantController extends Controller
     }
 
     return back()->with('success', 'Participante adicionado.');
-    }
+}
+
 
 
     public function detachParticipant(Event $event, Participant $participant)

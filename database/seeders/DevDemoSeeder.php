@@ -35,29 +35,137 @@ class DevDemoSeeder extends Seeder
             EventType::firstOrCreate(['id' => $id], ['name' => $name]);
         }
 
-        // Create some example events
-        $event1 = Event::firstOrCreate([
-            'title' => 'Workshop Laravel',
-            'start_at' => now()->addDays(5),
-            'end_at' => now()->addDays(5)->addHours(3),
-            'hours' => 3,
-            'event_type_id' => 1
-        ]);
+        // Create example events
+        $events = [
+            [
+                'title' => 'Workshop Laravel',
+                'start_at' => now()->addDays(5),
+                'end_at'   => now()->addDays(5)->addHours(3),
+                'hours'    => 3,
+                'event_type_id' => 1,
+            ],
+            [
+                'title' => 'Palestra sobre Segurança',
+                'start_at' => now()->addDays(10),
+                'end_at'   => now()->addDays(10)->addHours(2),
+                'hours'    => 2,
+                'event_type_id' => 3,
+            ],
+            [
+                'title' => 'Curso de PHP Moderno',
+                'start_at' => now()->addDays(15),
+                'end_at'   => now()->addDays(20),
+                'hours'    => 20,
+                'event_type_id' => 5,
+            ],
+            [
+                'title' => 'Workshop React Avançado',
+                'start_at' => now()->addDays(7),
+                'end_at'   => now()->addDays(7)->addHours(4),
+                'hours'    => 4,
+                'event_type_id' => 1,
+            ],
+            [
+                'title' => 'Formação DevOps Básico',
+                'start_at' => now()->addDays(12),
+                'end_at'   => now()->addDays(14),
+                'hours'    => 16,
+                'event_type_id' => 2,
+            ],
+            [
+                'title' => 'Webinar sobre Cloud',
+                'start_at' => now()->addDays(8),
+                'end_at'   => now()->addDays(8)->addHours(2),
+                'hours'    => 2,
+                'event_type_id' => 4,
+            ],
+            [
+                'title' => 'Curso de Python para Dados',
+                'start_at' => now()->addDays(18),
+                'end_at'   => now()->addDays(25),
+                'hours'    => 30,
+                'event_type_id' => 5,
+            ],
+            [
+                'title' => 'Palestra sobre IA Generativa',
+                'start_at' => now()->addDays(20),
+                'end_at'   => now()->addDays(20)->addHours(3),
+                'hours'    => 3,
+                'event_type_id' => 3,
+            ],
+            [
+                'title' => 'Workshop Git & GitHub',
+                'start_at' => now()->addDays(3),
+                'end_at'   => now()->addDays(3)->addHours(2),
+                'hours'    => 2,
+                'event_type_id' => 1,
+            ],
+            [
+                'title' => 'Webinar Introdução ao Docker',
+                'start_at' => now()->addDays(6),
+                'end_at'   => now()->addDays(6)->addHours(2),
+                'hours'    => 2,
+                'event_type_id' => 4,
+            ],
+            [
+                'title' => 'Formação Segurança em Redes',
+                'start_at' => now()->addDays(30),
+                'end_at'   => now()->addDays(32),
+                'hours'    => 16,
+                'event_type_id' => 2,
+            ],
+            [
+                'title' => 'Curso Frontend Completo',
+                'start_at' => now()->addDays(40),
+                'end_at'   => now()->addDays(50),
+                'hours'    => 40,
+                'event_type_id' => 5,
+            ],
+        ];
 
-        $event2 = Event::firstOrCreate([
-            'title' => 'Palestra sobre Segurança',
-            'start_at' => now()->addDays(10),
-            'end_at' => now()->addDays(10)->addHours(2),
-            'hours' => 2,
-            'event_type_id' => 3
-        ]);
+        $eventModels = [];
+        foreach ($events as $e) {
+            $eventModels[] = Event::firstOrCreate(
+                ['title' => $e['title']],
+                $e
+            );
+        }
 
-        // Participant examples
-        $p1 = Participant::firstOrCreate(['email' => 'alice@example.com'], ['name' => 'Alice']);
-        $p2 = Participant::firstOrCreate(['email' => 'bob@example.com'], ['name' => 'Bob']);
+        // Create participants
+        $participantsData = [
+            ['Alice Johnson', 'alice@example.com'],
+            ['Bob Smith', 'bob@example.com'],
+            ['Carlos Silva', 'carlos@example.com'],
+            ['Diana Santos', 'diana@example.com'],
+            ['Eduardo Costa', 'eduardo@example.com'],
+            ['Fernanda Lima', 'fernanda@example.com'],
+            ['Gabriel Souza', 'gabriel@example.com'],
+            ['Helena Rocha', 'helena@example.com'],
+            ['Igor Mendes', 'igor@example.com'],
+            ['Julia Ferreira', 'julia@example.com'],
+            ['Kevin Almeida', 'kevin@example.com'],
+            ['Laura Martins', 'laura@example.com'],
+            ['Marcelo Oliveira', 'marcelo@example.com'],
+            ['Natália Ribeiro', 'natalia@example.com'],
+            ['Otávio Pereira', 'otavio@example.com'],
+            ['Paula Azevedo', 'paula@example.com'],
+            ['Rafael Gomes', 'rafael@example.com'],
+            ['Sofia Carvalho', 'sofia@example.com'],
+            ['Thiago Duarte', 'thiago@example.com'],
+            ['Vanessa Barros', 'vanessa@example.com'],
+            ['William Torres', 'william@example.com'],
+            ['Yasmin Costa', 'yasmin@example.com'],
+        ];
+
+        $participants = [];
+        foreach ($participantsData as [$name, $email]) {
+            $participants[] = Participant::firstOrCreate(['email' => $email], ['name' => $name]);
+        }
 
         // Link participants to events
-        $event1->participants()->syncWithoutDetaching([$p1->id, $p2->id]);
-        $event2->participants()->syncWithoutDetaching([$p2->id]);
+        foreach ($eventModels as $index => $event) {
+            $assigned = collect($participants)->random(rand(3, 6))->pluck('id')->toArray();
+            $event->participants()->syncWithoutDetaching($assigned);
+        }
     }
 }
