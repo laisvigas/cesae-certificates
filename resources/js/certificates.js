@@ -7,16 +7,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (emailButtons.length) {
         emailButtons.forEach(btn => {
             btn.addEventListener("click", () => {
-                const name = btn.dataset.participantName;
-                const email = btn.dataset.participantEmail;
-                const course = "Curso X"; // or fetch dynamically
-                const date = new Date().toISOString().slice(0, 10); // today
+                const participantId = btn.dataset.participantId;
+                const eventId = btn.dataset.eventId;
 
                 const form = document.getElementById("certificate-email-form");
-                form.querySelector("[name='name']").value = name;
-                form.querySelector("[name='email']").value = email;
-                form.querySelector("[name='course']").value = course;
-                form.querySelector("[name='date']").value = date;
+                form.querySelector("[name='participant_id']").value = participantId;
+                form.querySelector("[name='event_id']").value = eventId;
 
                 form.submit();
             });
@@ -24,25 +20,33 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+// js para criar o menu dropdown dinamico de participantes ligados a um evento já selecionado na view custom.blade.php
+document.addEventListener('DOMContentLoaded', () => {
+    const eventSelect = document.getElementById('event_id');
+    const participantSelect = document.getElementById('participant_id');
 
+    // Parse the JSON from the data attribute
+    const participantsByEvent = JSON.parse(eventSelect.dataset.participants);
 
-// js para preencher automaticamente os campos do formulario do email com os valores dos campos do formulario do certificado (na blade certificates/custom.blade.php)
-document.addEventListener("DOMContentLoaded", () => {
-    const downloadForm = document.querySelector('form[action*="certificates.download.custom"]');
-    const emailForm = document.querySelector('form[action*="certificates.send.custom"]');
+    eventSelect.addEventListener('change', () => {
+        const eventId = eventSelect.value;
 
-    if (downloadForm && emailForm) {
-        // Sync all inputs by their name
-        downloadForm.querySelectorAll("input").forEach(input => {
-            input.addEventListener("input", () => {
-                const target = emailForm.querySelector(`[name="${input.name}"]`);
-                if (target) {
-                    target.value = input.value;
-                }
-            });
+        // Reset participants dropdown
+        participantSelect.innerHTML = '<option value="">Selecione um participante</option>';
+
+        if (!eventId || !participantsByEvent[eventId]) return;
+
+        participantsByEvent[eventId].forEach(p => {
+            const option = document.createElement('option');
+            option.value = p.id;
+            option.textContent = p.name;
+            participantSelect.appendChild(option);
         });
-    }
+    });
 });
+
+
+
 
 
 
