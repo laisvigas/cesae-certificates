@@ -78,12 +78,6 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
 
 });
 
-// Rota TESTE fora do middleware
-Route::post('/test-import-csv/{event}', [ParticipantController::class, 'importCsv']) ->name('participants.importCsvTESTE');
-
-
-
-
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
