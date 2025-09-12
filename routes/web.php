@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -24,6 +25,7 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::get('/events/view-edit-event/{id}', [EventController::class, 'viewEditEvent']) -> name('events.view-edit');
     Route::put('/event-update', [EventController::class, 'updateEvent']) -> name('events.update');
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
+
 
 
     // Rotas de participantes
@@ -54,6 +56,10 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
         // detach participant from this event
         Route::delete('/participants/{participant}', [ParticipantController::class, 'detachParticipant'])
             ->name('participants.detach');
+
+        // receives a cvs file with participants and attach them all to this event
+        Route::post('/participants/import-csv', [ParticipantController::class, 'importCsv'])
+        ->name('participants.importCsv');
     });
 
     // Rotas de certificados
@@ -61,18 +67,23 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     // Custom certificate form routes
     Route::get('/certificates/custom', [CertificateController::class, 'custom'])->name('certificates.custom');
     Route::get('/certificates/download-custom', [CertificateController::class, 'certificateDownloadCustom'])->name('certificates.download.custom');
+    Route::post('/certificates/send/custom', [CertificateController::class, 'sendCustom'])->name('certificates.send.custom');
 
     // Event/participant certificate route
     Route::get('/certificates/download/{event}/{participant}', [CertificateController::class, 'certificateDownload'])->name('certificates.download');
-
-    // send certificate pdf by email routes
     Route::post('/certificates/send', [CertificateController::class, 'sendCertificate'])->name('certificates.send');
-    Route::post('/certificates/send/custom', [CertificateController::class, 'sendCustom'])->name('certificates.send.custom');
+    Route::post('/events/{event}/certificates/send-all', [CertificateController::class, 'sendAll']) ->name('certificates.sendAll');
 
 
 
 
 });
+
+// Rota TESTE fora do middleware
+Route::post('/test-import-csv/{event}', [ParticipantController::class, 'importCsv']) ->name('participants.importCsvTESTE');
+
+
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -81,3 +92,4 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
