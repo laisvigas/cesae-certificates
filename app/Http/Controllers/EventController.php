@@ -8,15 +8,75 @@ use Illuminate\Http\Request;
 
 class EventController extends Controller
 {
-    public function indexEvent()
-    {
-        // avoids N+1 and shows type name
-        $events = Event::with('type')
-            ->orderBy('start_at', 'desc')
-            ->get();
+    public function indexEvent(Request $request)
+{
+    $selected = collect($request->input('types', []))
+        ->filter(fn ($v) => $v !== '' && $v !== null)
+        ->values()
+        ->all();
 
-        return view('events.index', compact('events'));
+    // estados selecionados 
+    $selectedStatus = collect($request->input('status', []))
+        ->filter(fn ($v) => in_array($v, ['past', 'ongoing', 'upcoming'], true))
+        ->values()
+        ->all();
+
+    // carrega os tipos para popular o dropdown 
+    $types = EventType::orderBy('name')->get();
+
+    $now = now();
+
+    $eventsQuery = Event::with('type')
+        ->withCount('participants')   // evita N+1 no count
+        ->orderBy('start_at', 'desc');
+
+    // filtro por tipo
+    if (!empty($selected)) {
+        $wantsNull = in_array('null', $selected, true);
+        $ids = array_filter($selected, fn ($v) => $v !== 'null');
+
+        $eventsQuery->where(function ($q) use ($ids, $wantsNull) {
+            if (!empty($ids)) {
+                $q->whereIn('event_type_id', $ids);
+            }
+            if ($wantsNull) {
+                $q->orWhereNull('event_type_id');
+            }
+        });
     }
+
+    // filtro por estado
+    if (!empty($selectedStatus)) {
+        $eventsQuery->where(function ($q) use ($selectedStatus, $now) {
+            // Encerrado 
+            if (in_array('past', $selectedStatus, true)) {
+                $q->orWhere('end_at', '<', $now);
+            }
+            // A decorrer 
+            if (in_array('ongoing', $selectedStatus, true)) {
+                $q->orWhere(function ($qq) use ($now) {
+                    $qq->where('start_at', '<=', $now)
+                       ->where('end_at', '>=', $now);
+                });
+            }
+            // Agendado 
+            if (in_array('upcoming', $selectedStatus, true)) {
+                $q->orWhere('start_at', '>', $now);
+            }
+        });
+    }
+
+    $events = $eventsQuery->get();
+
+    return view('events.index', [
+        'events'         => $events,
+        'types'          => $types,
+        'selected'       => $selected,        
+        'selectedStatus' => $selectedStatus,  
+    ]);
+}
+
+
 
     public function createEvent()
     {

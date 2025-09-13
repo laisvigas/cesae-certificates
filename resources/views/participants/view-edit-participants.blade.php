@@ -4,14 +4,29 @@
 
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Lista de Participantes: {{ $event->type->name }} - {{ $event->title }}
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight truncate">
+                Lista de Participantes: {{ $event->type->name ?? '—' }} - {{ $event->title }}
             </h2>
         </div>
     </x-slot>
 
+    @php
+        $now = now();
+        $hasParticipants = $participants->isNotEmpty();
+        $status = $event->end_at->lt($now) ? 'Encerrado' : ($event->start_at->gt($now) ? 'Agendado' : 'A decorrer');
+        $badgeClass = [
+            'Encerrado' => 'bg-gray-100 text-gray-700',
+            'Agendado'  => 'bg-blue-100 text-blue-800',
+            'A decorrer'=> 'bg-green-100 text-green-800',
+        ][$status];
+
+        // Abre o "Adicionar participante" se houve validação falhada ou se há old() preenchido
+        $openAdd = $errors->any() || old('name') || old('email') || old('phone') || old('address') || old('document_type') || old('document_number');
+    @endphp
+
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+
             {{-- Full-bleed no mobile; arredondado e espaçoso em ≥sm --}}
             <div class="bg-white shadow rounded-none sm:rounded-lg p-4 sm:p-6">
 
@@ -22,114 +37,175 @@
                     </div>
                 @endif
 
-                {{-- Add Participant Form (APARECE SEMPRE) --}}
-                <div id="add-form" class="mt-2 mb-2">
-                    <h3 class="text-lg font-semibold mb-2">Adicionar novo participante ao evento:</h3>
+                {{-- ===================== Painel do evento + Toolbar ===================== --}}
+                <div class="mb-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    {{-- Meta do evento --}}
+                    <div class="lg:col-span-2 rounded-lg border border-gray-200 bg-white p-4">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="min-w-0">
+                                <div class="text-xs text-gray-500">Evento</div>
+                                <h3 class="text-lg font-semibold text-gray-900 truncate">{{ $event->title }}</h3>
+                                <div class="mt-2 text-sm text-gray-600 flex flex-wrap gap-x-4 gap-y-1">
+                                    <span><span class="font-medium">Tipo:</span> {{ optional($event->type)->name ?? '—' }}</span>
+                                    <span><span class="font-medium">Início:</span> {{ $event->start_at->format('d/m/Y H:i') }}</span>
+                                    <span><span class="font-medium">Fim:</span> {{ $event->end_at->format('d/m/Y H:i') }}</span>
+                                    <span><span class="font-medium">Horas:</span> {{ $event->hours ?? '—' }}</span>
+                                </div>
+                            </div>
+                            <span class="shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $badgeClass }}">
+                                {{ $status }}
+                            </span>
+                        </div>
+                    </div>
 
-                    {{-- Erros de validação (importante para feedback) --}}
-                    @if ($errors->any())
-                      <div class="mb-3 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                        <ul class="list-disc pl-5">
-                          @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                          @endforeach
-                        </ul>
-                      </div>
-                    @endif
-
-                    {{-- Nome e Email obrigatórios; restantes opcionais --}}
-                    <form action="{{ route('participants.storeAndAttach', $event->id) }}" method="POST" class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                        @csrf
-
-                        <div>
-                            <label for="p_name" class="block text-sm font-medium text-gray-700">
-                                Nome <span class="text-red-600">*</span>
+                    {{-- Toolbar principal (CSV + Enviar todos) --}}
+                    <div class="rounded-lg border border-gray-200 bg-white p-4 flex flex-wrap items-center justify-between gap-2">
+                        <!-- upload a csv file with participants data and attachs each one of them to this event in data base -->
+                        <!-- USING A TEST ROUTE TO CHECK IF THE FUNCTION IS WORKING (IT IS).
+                             There must be a problem caused by the middleware/security token that is preventing
+                             the original 'participants.importCsv' route to work -->
+                        <form action="/test-import-csv/{{ $event->id }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <label class="cursor-pointer inline-flex items-center gap-2 rounded bg-purple-600 px-3 py-2 text-white text-sm hover:bg-purple-700">
+                                <svg class="w-5 h-5" fill="currentColor" aria-hidden="true"><use href="#ms-upload_file"/></svg>
+                                <span>Carregar CSV</span>
+                                <input type="file" name="csv_file" accept=".csv" class="hidden" onchange="this.form.submit()">
                             </label>
-                            <input id="p_name" type="text" name="name" value="{{ old('name') }}" required
-                                   class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
-                                   placeholder="Nome completo" autocomplete="name">
-                        </div>
+                        </form>
 
-                        <div>
-                            <label for="p_email" class="block text-sm font-medium text-gray-700">
-                                Email <span class="text-red-600">*</span>
-                            </label>
-                            <input id="p_email" type="email" name="email" value="{{ old('email') }}" required
-                                   class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
-                                   placeholder="email@exemplo.com" autocomplete="email">
-                        </div>
-
-                        <div>
-                            <label for="p_phone" class="block text-sm font-medium text-gray-700">Telemóvel</label>
-                            <input id="p_phone" type="text" name="phone" value="{{ old('phone') }}"
-                                   class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
-                                   placeholder="9 999 999 999" autocomplete="tel">
-                        </div>
-
-                        <div>
-                            <label for="p_address" class="block text-sm font-medium text-gray-700">Morada</label>
-                            <input id="p_address" type="text" name="address" value="{{ old('address') }}"
-                                   class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
-                                   placeholder="Rua, nº, cidade">
-                        </div>
-
-                        <div>
-                            <label for="p_doc_type" class="block text-sm font-medium text-gray-700">Tipo de Documento</label>
-                            <input id="p_doc_type" type="text" name="document_type" value="{{ old('document_type') }}"
-                                   class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
-                                   placeholder="BI / CC / Passaporte">
-                        </div>
-
-                        <div>
-                            <label for="p_doc_number" class="block text-sm font-medium text-gray-700">Nº do Documento</label>
-                            <input id="p_doc_number" type="text" name="document_number" value="{{ old('document_number') }}"
-                                   class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
-                                   placeholder="XXXXXXXXX">
-                        </div>
-
-                        <div class="sm:col-span-2 flex justify-start pt-1">
+                        <!-- Send certificates by email to each participant button -->
+                        <form action="{{ route('certificates.sendAll', $event->id) }}" method="POST">
+                            @csrf
                             <button type="submit"
-                                    class="inline-flex items-center justify-center gap-2 rounded bg-green-600 px-4 py-2 text-white text-sm hover:bg-green-700">
-                                <svg class="w-5 h-5" fill="currentColor" aria-hidden="true"><use href="#ms-add" /></svg>
-                                <span>Adicionar</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                {{-- Separador para dar sensação de bloco independente --}}
-                <div class="my-6 border-t border-gray-200" role="separator" aria-hidden="true"></div>
-
-                {{-- Ações de CSV + Enviar todos (CSV sempre visível; Enviar todos desabilita se vazio) --}}
-                @php $hasParticipants = $participants->isNotEmpty(); @endphp
-                <div class="flex flex-wrap items-center gap-2 mb-6">
-                    <form action="/test-import-csv/{{ $event->id }}" method="POST" enctype="multipart/form-data" class="inline-block">
-                        @csrf
-                        <label class="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded bg-purple-600 text-white text-sm hover:bg-purple-700">
-                            <svg class="w-6 h-6" fill="currentColor" aria-hidden="true"><use href="#ms-upload_file" /></svg>
-                            <span>Carregar CSV</span>
-                            <input type="file" name="csv_file" accept=".csv" class="hidden" onchange="this.form.submit()">
-                        </label>
-                    </form>
-
-                    <form action="{{ route('certificates.sendAll', $event->id) }}" method="POST" class="inline-block">
-                        @csrf
-                        <button type="submit"
                                 @class([
-                                    'inline-flex items-center gap-2 px-3 py-2 rounded text-sm',
+                                    'inline-flex items-center gap-2 rounded px-3 py-2 text-sm',
                                     'bg-blue-600 text-white hover:bg-blue-700' => $hasParticipants,
-                                    'bg-gray-200 text-gray-500 cursor-not-allowed' => !$hasParticipants,
-                                ])
-                                @if(!$hasParticipants) disabled @endif
+                                    'bg-gray-200 text-gray-500 cursor-not-allowed' => ! $hasParticipants,
+                                ]) @disabled(! $hasParticipants)
                                 title="Enviar certificado para todos os participantes"
                                 aria-label="Enviar certificado para todos os participantes">
-                            <svg class="w-6 h-6" fill="currentColor" aria-hidden="true"><use href="#ic-mail" /></svg>
-                            <span>Enviar todos os certificados</span>
-                        </button>
-                    </form>
+                                <svg class="w-5 h-5" fill="currentColor" aria-hidden="true"><use href="#ic-mail"/></svg>
+                                <span>Enviar todos</span>
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
-                {{-- Lista de participantes OU empty state --}}
+                {{-- ===================== Form: Adicionar participante (colapsável) ===================== --}}
+                <details class="rounded-lg border border-gray-200 bg-white p-4 sm:p-6 group" @if($openAdd) open @endif>
+                    <summary class="flex items-center justify-between cursor-pointer select-none">
+                        <div>
+                            <h3 class="text-base font-semibold text-gray-900">Adicionar participante</h3>
+                        </div>
+                        {{-- Chevron que gira quando aberto --}}
+                        <svg class="w-5 h-5 text-gray-500 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6"/>
+                        </svg>
+                    </summary>
+
+                    {{-- Conteúdo colapsável --}}
+                    <div class="mt-4">
+                        {{-- Erros de validação p/ feedbakc --}}
+                        @if ($errors->any())
+                          <div class="mb-3 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                            <ul class="list-disc pl-5">
+                              @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                              @endforeach
+                            </ul>
+                          </div>
+                        @endif
+
+                        {{-- Nome e Email obrigatórios; restantes opcionais --}}
+                        <form action="{{ route('participants.storeAndAttach', $event->id) }}"
+                              method="POST"
+                              class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                            @csrf
+
+                            {{-- Nome (obrigatório) --}}
+                            <div>
+                                <label for="p_name" class="block text-sm font-medium text-gray-700">
+                                    Nome <span class="text-red-600">*</span>
+                                </label>
+                                <input id="p_name" type="text" name="name" value="{{ old('name') }}" required
+                                       class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+                                       placeholder="Nome completo" autocomplete="name">
+                            </div>
+
+                            {{-- Email (obrigatório) --}}
+                            <div>
+                                <label for="p_email" class="block text-sm font-medium text-gray-700">
+                                    Email <span class="text-red-600">*</span>
+                                </label>
+                                <input id="p_email" type="email" name="email" value="{{ old('email') }}" required
+                                       class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+                                       placeholder="email@exemplo.com" autocomplete="email">
+                            </div>
+
+                            {{-- Telemóvel (opcional) --}}
+                            <div>
+                                <label for="p_phone" class="block text-sm font-medium text-gray-700">Telemóvel</label>
+                                <input id="p_phone" type="text" name="phone" value="{{ old('phone') }}"
+                                       class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+                                       placeholder="9 999 999 999" autocomplete="tel">
+                            </div>
+
+                            {{-- Morada (opcional) --}}
+                            <div>
+                                <label for="p_address" class="block text-sm font-medium text-gray-700">Morada</label>
+                                <input id="p_address" type="text" name="address" value="{{ old('address') }}"
+                                       class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+                                       placeholder="Rua, nº, cidade">
+                            </div>
+
+                            {{-- Tipo de Documento (opcional) --}}
+                            <div>
+                                <label for="p_doc_type" class="block text-sm font-medium text-gray-700">Tipo de Documento</label>
+                                <input id="p_doc_type" type="text" name="document_type" value="{{ old('document_type') }}"
+                                       class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+                                       placeholder="BI / CC / Passaporte">
+                            </div>
+
+                            {{-- Nº do Documento (opcional) --}}
+                            <div>
+                                <label for="p_doc_number" class="block text-sm font-medium text-gray-700">Nº do Documento</label>
+                                <input id="p_doc_number" type="text" name="document_number" value="{{ old('document_number') }}"
+                                       class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+                                       placeholder="XXXXXXXXX">
+                            </div>
+
+                            <div class="sm:col-span-2 flex justify-end pt-1">
+                                <button type="submit"
+                                        class="inline-flex items-center justify-center gap-2 rounded bg-green-600 px-4 py-2 text-white text-sm hover:bg-green-700">
+                                    <svg class="w-5 h-5" fill="currentColor" aria-hidden="true"><use href="#ms-add" /></svg>
+                                    <span>Adicionar</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </details>
+
+                {{-- separador entre seções --}}
+                <div class="my-6 border-t border-gray-200"></div>
+
+                {{-- ===================== Barra de busca simples ===================== --}}
+                <div class="mb-4 flex flex-col sm:flex-row sm:items-center gap-2">
+                    <form method="GET" class="flex items-center gap-2">
+                        {{-- mantém outros parâmetros (se houver) ao buscar --}}
+                        <input type="hidden" name="keep" value="1">
+                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Procurar por nome ou email"
+                               class="w-full sm:w-80 rounded border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-gray-900">
+                        <button class="rounded bg-gray-900 px-3 py-2 text-white text-sm hover:bg-gray-800">Buscar</button>
+                        @if(request('q'))
+                            <a href="{{ route('participants.view-edit', $event->id) }}" class="rounded border px-3 py-2 text-sm hover:bg-gray-50">Limpar</a>
+                        @endif
+                    </form>
+                    <div class="text-sm text-gray-500 sm:ml-auto">
+                        {{ method_exists($participants,'total') ? $participants->total() : $participants->count() }} participante(s)
+                    </div>
+                </div>
+
+                {{-- ===================== Lista de participantes ===================== --}}
                 @if($participants->isEmpty())
                     <div class="rounded border border-gray-200 p-6 text-center">
                         <p class="text-gray-600">Não há nenhum participante cadastrado neste evento ainda.</p>
@@ -137,57 +213,70 @@
                 @else
                     <div class="space-y-3">
                         @foreach($participants as $participant)
+                            {{-- ===== Card de participante com layout 3x2 + ações verticais ===== --}}
                             <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                                {{-- Leitura: grid responsivo (1 col no mobile, 2 col em >= sm) --}}
-                                <dl class="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 text-sm">
-                                    <div>
-                                        <dt class="font-bold text-gray-700">Nome</dt>
-                                        <dd class="text-gray-900 break-words">{{ $participant->name ?? '-' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="font-bold text-gray-700">Email</dt>
-                                        <dd class="text-gray-900 break-words">
-                                            @if($participant->email)
-                                                <a href="mailto:{{ $participant->email }}" class="hover:underline">{{ $participant->email }}</a>
-                                            @else
-                                                -
-                                            @endif
-                                        </dd>
-                                    </div>
-                                    <div>
-                                        <dt class="font-bold text-gray-700">Telemóvel</dt>
-                                        <dd class="text-gray-900">
-                                            @if($participant->phone)
-                                                <a href="tel:{{ preg_replace('/\s+/', '', $participant->phone) }}" class="hover:underline">{{ $participant->phone }}</a>
-                                            @else
-                                                -
-                                            @endif
-                                        </dd>
-                                    </div>
-                                    <div>
-                                        <dt class="font-bold text-gray-700">Morada</dt>
-                                        <dd class="text-gray-900 break-words">{{ $participant->address ?? '-' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="font-bold text-gray-700">Tipo documento</dt>
-                                        <dd class="text-gray-900">{{ $participant->document_type ?? '-' }}</dd>
-                                    </div>
-                                    <div>
-                                        <dt class="font-bold text-gray-700">Nº documento</dt>
-                                        <dd class="text-gray-900">{{ $participant->document_number ?? '-' }}</dd>
-                                    </div>
 
-                                    {{-- Ações: alinhadas à direita no sm+ --}}
-                                    <div class="sm:col-span-2">
-                                        <div class="mt-1 flex flex-wrap items-center justify-end gap-2">
+                                <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                                    {{-- Campos: em lg ocupam 3 colunas; 3 colunas x 2 linhas (6 campos) --}}
+                                    <dl class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-6 text-sm">
+                                        <div>
+                                            <dt class="font-semibold text-gray-700">Nome</dt>
+                                            <dd class="text-gray-900 break-words">{{ $participant->name ?? '-' }}</dd>
+                                        </div>
+
+                                        <div>
+                                            <dt class="font-semibold text-gray-700">Email</dt>
+                                            <dd class="text-gray-900 break-words">
+                                                @if($participant->email)
+                                                    <a href="mailto:{{ $participant->email }}" class="hover:underline">{{ $participant->email }}</a>
+                                                @else
+                                                    -
+                                                @endif
+                                            </dd>
+                                        </div>
+
+                                        <div>
+                                            <dt class="font-semibold text-gray-700">Telemóvel</dt>
+                                            <dd class="text-gray-900">
+                                                @if($participant->phone)
+                                                    <a href="tel:{{ preg_replace('/\s+/', '', $participant->phone) }}" class="hover:underline">{{ $participant->phone }}</a>
+                                                @else
+                                                    -
+                                                @endif
+                                            </dd>
+                                        </div>
+
+                                        <div>
+                                            <dt class="font-semibold text-gray-700">Morada</dt>
+                                            <dd class="text-gray-900 break-words">{{ $participant->address ?? '-' }}</dd>
+                                        </div>
+
+                                        <div>
+                                            <dt class="font-semibold text-gray-700">Tipo documento</dt>
+                                            <dd class="text-gray-900">{{ $participant->document_type ?? '-' }}</dd>
+                                        </div>
+
+                                        <div>
+                                            <dt class="font-semibold text-gray-700">Nº documento</dt>
+                                            <dd class="text-gray-900">{{ $participant->document_number ?? '-' }}</dd>
+                                        </div>
+                                    </dl>
+
+                                    {{-- Coluna de ações: horizontal no mobile; VERTICAL a partir de lg (ícones tamanho fixo) --}}
+                                    <div class="lg:col-span-1">
+                                        <div class="mt-1 flex flex-wrap items-center justify-end gap-2 lg:flex-col lg:items-end lg:justify-start">
+                                            <!-- Download -->
                                             <a href="{{ route('certificates.download', [$event->id, $participant->id]) }}"
-                                               class="inline-flex items-center justify-center rounded bg-blue-600 p-2 text-white hover:bg-blue-700"
+                                               class="inline-flex h-10 w-10 items-center justify-center rounded bg-blue-600 text-white hover:bg-blue-700"
                                                title="Descarregar certificado" aria-label="Descarregar certificado">
-                                                <svg class="w-6 h-6" fill="currentColor" aria-hidden="true"><use href="#ic-download" /></svg>
+                                                <svg class="h-5 w-5" fill="currentColor" aria-hidden="true">
+                                                    <use href="#ic-download" />
+                                                </svg>
                                             </a>
 
+                                            <!-- Enviar por email -->
                                             <button type="button"
-                                                    class="inline-flex items-center justify-center rounded bg-blue-600 p-2 text-white hover:bg-blue-700"
+                                                    class="inline-flex h-10 w-10 items-center justify-center rounded bg-blue-600 text-white hover:bg-blue-700"
                                                     data-cert-email
                                                     data-participant-id="{{ $participant->id }}"
                                                     data-participant-name="{{ $participant->name }}"
@@ -196,34 +285,43 @@
                                                     data-event-title="{{ $event->title }}"
                                                     data-event-end="{{ \Carbon\Carbon::parse($event->end_at)->format('d/m/Y') }}"
                                                     title="Enviar certificado por email" aria-label="Enviar certificado por email">
-                                                <svg class="w-6 h-6" fill="currentColor" aria-hidden="true"><use href="#ic-single-mail" /></svg>
+                                                <svg class="h-5 w-5" fill="currentColor" aria-hidden="true">
+                                                    <use href="#ic-single-mail" />
+                                                </svg>
                                             </button>
 
-                                            <form action="{{ route('participants.detach', [$event->id, $participant->id]) }}" method="POST"
+                                            <!-- Remover -->
+                                            <form action="{{ route('participants.detach', [$event->id, $participant->id]) }}"
+                                                  method="POST"
                                                   onsubmit="return confirm('Remover este participante do evento?');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit"
-                                                        class="inline-flex items-center justify-center rounded bg-red-600 p-2 text-white hover:bg-red-700"
+                                                        class="inline-flex h-10 w-10 items-center justify-center rounded bg-red-600 text-white hover:bg-red-700"
                                                         title="Remover" aria-label="Remover">
-                                                    <svg class="w-6 h-6" fill="currentColor" aria-hidden="true"><use href="#ic-trash" /></svg>
+                                                    <svg class="h-5 w-5" fill="currentColor" aria-hidden="true">
+                                                        <use href="#ic-trash" />
+                                                    </svg>
                                                 </button>
                                             </form>
 
+                                            <!-- Editar (toggle) -->
                                             <button type="button"
-                                                    class="inline-flex items-center justify-center rounded border border-gray-200 p-2 text-gray-700 hover:bg-gray-50"
+                                                    class="inline-flex h-10 w-10 items-center justify-center rounded border border-gray-200 text-gray-700 hover:bg-gray-50"
                                                     data-toggle-edit
                                                     data-target="#edit-{{ $participant->id }}"
                                                     aria-expanded="false"
                                                     aria-controls="edit-{{ $participant->id }}">
-                                                <svg class="w-6 h-6" fill="currentColor" aria-hidden="true"><use href="#ms-edit" /></svg>
+                                                <svg class="h-5 w-5" fill="currentColor" aria-hidden="true">
+                                                    <use href="#ms-edit" />
+                                                </svg>
                                                 <span class="sr-only">Editar</span>
                                             </button>
                                         </div>
                                     </div>
-                                </dl>
+                                </div>
 
-                                {{-- Form de edição (toggle) --}}
+                                <!-- Form de edição (toggle) ocupa largura total abaixo -->
                                 <div id="edit-{{ $participant->id }}" class="mt-4 hidden border-t border-gray-200 pt-4">
                                     <form action="{{ route('participants.update', [$participant->id]) }}" method="POST" class="space-y-3 bg-gray-50 rounded-md p-4">
                                         @csrf
@@ -277,9 +375,15 @@
                                         </div>
                                     </form>
                                 </div>
+
                             </div>
                         @endforeach
                     </div>
+
+                    {{-- paginação (se $participants for paginator) || not working --}}
+                    @if(method_exists($participants, 'links'))
+                        <div class="mt-4">{{ $participants->links() }}</div>
+                    @endif
                 @endif
 
                 {{-- Form oculto para envio de certificado por email (único) --}}
