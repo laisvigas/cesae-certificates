@@ -180,6 +180,15 @@
                                        placeholder="XXXXXXXXX">
                             </div>
 
+
+                            {{-- Nacionalidade (opcional)--}}
+                            <div>
+                                <label for="p_nationality" class="block text-sm font-medium text-gray-700">Nacionalidade</label>
+                                <input id="p_nationality" type="text" name="nationality" value="{{ old('nationality') }}"
+                                       class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
+                                       placeholder="Portuguesa">
+                            </div>
+
                             <div class="sm:col-span-2 flex justify-end pt-1">
                                 <button type="submit"
                                         class="inline-flex items-center justify-center gap-2 rounded bg-green-600 px-4 py-2 text-white text-sm hover:bg-green-700">
@@ -265,6 +274,10 @@
                                         <div>
                                             <dt class="font-semibold text-gray-700">Nº documento</dt>
                                             <dd class="text-gray-900">{{ $participant->document_number ?? '-' }}</dd>
+                                        </div>
+                                        <div>
+                                            <dt class="font-semibold text-gray-700">Nacionalidade</dt>
+                                            <dd class="text-gray-900">{{ $participant->nationality ?? '-' }}</dd>
                                         </div>
                                     </dl>
 
@@ -361,6 +374,11 @@
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700">Nº do Documento</label>
                                                 <input type="text" name="document_number" value="{{ $participant->document_number }}"
+                                                       class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700">Nacionalidade</label>
+                                                <input type="text" name="nationality" value="{{ $participant->nationality }}"
                                                        class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900">
                                             </div>
                                         </div>
