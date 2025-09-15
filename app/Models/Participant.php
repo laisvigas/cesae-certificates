@@ -14,6 +14,7 @@ class Participant extends Model
         'address',
         'document_type',
         'document_number',
+        'nationality',
     ];
 
     /**
