@@ -5,7 +5,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight truncate">
-                Lista de Participantes: {{ $event->type->name ?? '—' }} - {{ $event->title }}
+                {{ $event->type->name ?? '—' }} - {{ $event->title }}
             </h2>
         </div>
     </x-slot>
@@ -45,11 +45,17 @@
                             <div class="min-w-0">
                                 <div class="text-xs text-gray-500">Evento</div>
                                 <h3 class="text-lg font-semibold text-gray-900 truncate">{{ $event->title }}</h3>
+                                    <p class="text-xs text-gray-500">
+                                    {!! $event->description ? nl2br(e($event->description)) : '—' !!}
+                                    </p>                                
                                 <div class="mt-2 text-sm text-gray-600 flex flex-wrap gap-x-4 gap-y-1">
                                     <span><span class="font-medium">Tipo:</span> {{ optional($event->type)->name ?? '—' }}</span>
                                     <span><span class="font-medium">Início:</span> {{ $event->start_at->format('d/m/Y H:i') }}</span>
                                     <span><span class="font-medium">Fim:</span> {{ $event->end_at->format('d/m/Y H:i') }}</span>
                                     <span><span class="font-medium">Horas:</span> {{ $event->hours ?? '—' }}</span>
+                                    <span><span class="font-medium">Instituição:</span> {{ $event->issuer_institution ?? config('app.name') ?? '—' }}</span>
+                                    <span><span class="font-medium">Responsável:</span> {{ $event->issuer_name ?? '—' }}</span>
+                                    <span><span class="font-medium">Cargo:</span> {{ $event->issuer_role ?? '—' }}</span>
                                 </div>
                             </div>
                             <span class="shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $badgeClass }}">

@@ -5,78 +5,69 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\EventType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class EventController extends Controller
 {
     public function indexEvent(Request $request)
-{
-    $selected = collect($request->input('types', []))
-        ->filter(fn ($v) => $v !== '' && $v !== null)
-        ->values()
-        ->all();
+    {
+        $selected = collect($request->input('types', []))
+            ->filter(fn ($v) => $v !== '' && $v !== null)
+            ->values()
+            ->all();
 
-    // estados selecionados 
-    $selectedStatus = collect($request->input('status', []))
-        ->filter(fn ($v) => in_array($v, ['past', 'ongoing', 'upcoming'], true))
-        ->values()
-        ->all();
+        $selectedStatus = collect($request->input('status', []))
+            ->filter(fn ($v) => in_array($v, ['past', 'ongoing', 'upcoming'], true))
+            ->values()
+            ->all();
 
-    // carrega os tipos para popular o dropdown 
-    $types = EventType::orderBy('name')->get();
+        $types = EventType::orderBy('name')->get();
+        $now = now();
 
-    $now = now();
+        $eventsQuery = Event::with('type')
+            ->withCount('participants')
+            ->orderBy('start_at', 'desc');
 
-    $eventsQuery = Event::with('type')
-        ->withCount('participants')   // evita N+1 no count
-        ->orderBy('start_at', 'desc');
+        if (!empty($selected)) {
+            $wantsNull = in_array('null', $selected, true);
+            $ids = array_filter($selected, fn ($v) => $v !== 'null');
 
-    // filtro por tipo
-    if (!empty($selected)) {
-        $wantsNull = in_array('null', $selected, true);
-        $ids = array_filter($selected, fn ($v) => $v !== 'null');
+            $eventsQuery->where(function ($q) use ($ids, $wantsNull) {
+                if (!empty($ids)) {
+                    $q->whereIn('event_type_id', $ids);
+                }
+                if ($wantsNull) {
+                    $q->orWhereNull('event_type_id');
+                }
+            });
+        }
 
-        $eventsQuery->where(function ($q) use ($ids, $wantsNull) {
-            if (!empty($ids)) {
-                $q->whereIn('event_type_id', $ids);
-            }
-            if ($wantsNull) {
-                $q->orWhereNull('event_type_id');
-            }
-        });
+        if (!empty($selectedStatus)) {
+            $eventsQuery->where(function ($q) use ($selectedStatus, $now) {
+                if (in_array('past', $selectedStatus, true)) {
+                    $q->orWhere('end_at', '<', $now);
+                }
+                if (in_array('ongoing', $selectedStatus, true)) {
+                    $q->orWhere(function ($qq) use ($now) {
+                        $qq->where('start_at', '<=', $now)
+                           ->where('end_at', '>=', $now);
+                    });
+                }
+                if (in_array('upcoming', $selectedStatus, true)) {
+                    $q->orWhere('start_at', '>', $now);
+                }
+            });
+        }
+
+        $events = $eventsQuery->get();
+
+        return view('events.index', [
+            'events'         => $events,
+            'types'          => $types,
+            'selected'       => $selected,
+            'selectedStatus' => $selectedStatus,
+        ]);
     }
-
-    // filtro por estado
-    if (!empty($selectedStatus)) {
-        $eventsQuery->where(function ($q) use ($selectedStatus, $now) {
-            // Encerrado 
-            if (in_array('past', $selectedStatus, true)) {
-                $q->orWhere('end_at', '<', $now);
-            }
-            // A decorrer 
-            if (in_array('ongoing', $selectedStatus, true)) {
-                $q->orWhere(function ($qq) use ($now) {
-                    $qq->where('start_at', '<=', $now)
-                       ->where('end_at', '>=', $now);
-                });
-            }
-            // Agendado 
-            if (in_array('upcoming', $selectedStatus, true)) {
-                $q->orWhere('start_at', '>', $now);
-            }
-        });
-    }
-
-    $events = $eventsQuery->get();
-
-    return view('events.index', [
-        'events'         => $events,
-        'types'          => $types,
-        'selected'       => $selected,        
-        'selectedStatus' => $selectedStatus,  
-    ]);
-}
-
-
 
     public function createEvent()
     {
@@ -87,13 +78,25 @@ class EventController extends Controller
     public function storeEvent(Request $request)
     {
         $data = $request->validate([
-            'title'         => ['required', 'string', 'max:255'],
-            'description'   => ['nullable', 'string'],
-            'start_at'      => ['required', 'date'],
-            'end_at'        => ['required', 'date', 'after_or_equal:start_at'],
-            'hours'         => ['nullable', 'integer', 'min:0'],
-            'event_type_id' => ['nullable', 'exists:event_types,id'],
+            'title'               => ['required', 'string', 'max:255'],
+            'description'         => ['nullable', 'string'],
+            'start_at'            => ['required', 'date'],
+            'end_at'              => ['required', 'date', 'after_or_equal:start_at'],
+            'hours'               => ['nullable', 'integer', 'min:0'],
+            'event_type_id'       => ['nullable', 'exists:event_types,id'],
+
+            // NOVOS CAMPOS (opcionais)
+            'issuer_institution'  => ['nullable', 'string', 'max:150'],
+            'issuer_name'         => ['nullable', 'string', 'max:120'],
+            'issuer_role'         => ['nullable', 'string', 'max:120'],
+            'issuer_signature'    => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:1024'],
         ]);
+
+        // Upload da assinatura (se houver)
+        if ($request->hasFile('issuer_signature')) {
+            $path = $request->file('issuer_signature')->store('signatures', 'public');
+            $data['issuer_signature_path'] = $path;
+        }
 
         Event::create($data);
 
@@ -102,8 +105,13 @@ class EventController extends Controller
 
     public function deleteEvent($id)
     {
-        // finds it or returns 404; deletes and returns with message
         $event = Event::findOrFail($id);
+
+        // (Opcional) apagar assinatura associada ao evento ao deletar
+        if ($event->issuer_signature_path && Storage::disk('public')->exists($event->issuer_signature_path)) {
+            Storage::disk('public')->delete($event->issuer_signature_path);
+        }
+
         $event->delete();
 
         return redirect()->route('events.index')->with('success', 'Evento removido com sucesso!');
@@ -111,7 +119,6 @@ class EventController extends Controller
 
     public function viewEditEvent($id)
     {
-        // loads event + types for the <select>
         $event = Event::with('type')->findOrFail($id);
         $types = EventType::orderBy('name')->get();
 
@@ -120,18 +127,33 @@ class EventController extends Controller
 
     public function updateEvent(Request $request)
     {
-        // includes validation for ID and event_type_id
         $validated = $request->validate([
-            'id'            => ['required', 'exists:events,id'],
-            'title'         => ['required', 'string', 'max:255'],
-            'description'   => ['nullable', 'string'],
-            'start_at'      => ['required', 'date'],
-            'end_at'        => ['required', 'date', 'after_or_equal:start_at'],
-            'hours'         => ['nullable', 'integer', 'min:0'],
-            'event_type_id' => ['nullable', 'exists:event_types,id'],
+            'id'                  => ['required', 'exists:events,id'],
+            'title'               => ['required', 'string', 'max:255'],
+            'description'         => ['nullable', 'string'],
+            'start_at'            => ['required', 'date'],
+            'end_at'              => ['required', 'date', 'after_or_equal:start_at'],
+            'hours'               => ['nullable', 'integer', 'min:0'],
+            'event_type_id'       => ['nullable', 'exists:event_types,id'],
+
+            // NOVOS CAMPOS (opcionais)
+            'issuer_institution'  => ['nullable', 'string', 'max:150'],
+            'issuer_name'         => ['nullable', 'string', 'max:120'],
+            'issuer_role'         => ['nullable', 'string', 'max:120'],
+            'issuer_signature'    => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:1024'],
         ]);
 
         $event = Event::findOrFail($validated['id']);
+
+        // Se veio nova assinatura, apaga a antiga e grava a nova
+        if ($request->hasFile('issuer_signature')) {
+            if ($event->issuer_signature_path && Storage::disk('public')->exists($event->issuer_signature_path)) {
+                Storage::disk('public')->delete($event->issuer_signature_path);
+            }
+            $path = $request->file('issuer_signature')->store('signatures', 'public');
+            $validated['issuer_signature_path'] = $path;
+        }
+
         $event->update($validated);
 
         return redirect()->route('events.index')->with('success', 'Evento atualizado com sucesso!');

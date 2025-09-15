@@ -73,6 +73,43 @@
                             class="w-full border rounded px-3 py-2">
                     </div>
 
+                    <fieldset class="mt-6 border rounded-lg p-4">
+        <legend class="px-2 text-sm font-semibold text-gray-700">Dados do emissor</legend>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+            <div>
+                <label class="block text-sm font-medium mb-1">Instituição emissora</label>
+                <input type="text" name="issuer_institution"
+                    value="{{ old('issuer_institution', $event->issuer_institution) }}"
+                    class="w-full border rounded px-3 py-2" placeholder="Ex.: ACME Treinamentos">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-1">Nome do responsável</label>
+                <input type="text" name="issuer_name"
+                    value="{{ old('issuer_name', $event->issuer_name) }}"
+                    class="w-full border rounded px-3 py-2" placeholder="Ex.: Maria Silva">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-1">Cargo do responsável</label>
+                <input type="text" name="issuer_role"
+                    value="{{ old('issuer_role', $event->issuer_role) }}"
+                    class="w-full border rounded px-3 py-2" placeholder="Ex.: Coordenadora Pedagógica">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-1">Assinatura (PNG/JPG)</label>
+                <input type="file" name="issuer_signature" accept="image/png,image/jpeg"
+                       class="w-full border rounded px-3 py-2">
+                @if(!empty($event->issuer_signature_path))
+                    <p class="text-xs text-gray-500 mt-1">
+                        Atual: <span class="underline break-all">{{ $event->issuer_signature_path }}</span>
+                    </p>
+                @endif
+            </div>
+        </div>
+    </fieldset>
 
                     <div class="pt-2">
                         <button type="submit" class="px-4 py-2 rounded bg-gray-900 text-white">

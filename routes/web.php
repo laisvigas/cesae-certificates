@@ -64,17 +64,28 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
 
     // Rotas de certificados
 
-    // Custom certificate form routes
-    Route::get('/certificates/custom', [CertificateController::class, 'custom'])->name('certificates.custom');
-    Route::get('/certificates/download-custom', [CertificateController::class, 'certificateDownloadCustom'])->name('certificates.download.custom');
-    Route::post('/certificates/send/custom', [CertificateController::class, 'sendCustom'])->name('certificates.send.custom');
+// Custom certificate form routes
+Route::get('/certificates/custom', [CertificateController::class, 'custom'])
+    ->name('certificates.custom');
 
-    // Event/participant certificate route
-    Route::get('/certificates/download/{event}/{participant}', [CertificateController::class, 'certificateDownload'])->name('certificates.download');
-    Route::post('/certificates/send', [CertificateController::class, 'sendCertificate'])->name('certificates.send');
-    Route::post('/events/{event}/certificates/send-all', [CertificateController::class, 'sendAll']) ->name('certificates.sendAll');
+// 🔁 MUDAR DE GET → POST (precisa para enviar arquivos do form)
+Route::post('/certificates/download-custom', [CertificateController::class, 'certificateDownloadCustom'])
+    ->name('certificates.download.custom');
 
+Route::post('/certificates/send/custom', [CertificateController::class, 'sendCustom'])
+    ->name('certificates.send.custom');
 
+// Event/participant certificate route (pode continuar assim)
+Route::get('/certificates/download/{event}/{participant}', [CertificateController::class, 'certificateDownload'])
+    ->name('certificates.download');
+
+Route::post('/certificates/send', [CertificateController::class, 'sendCertificate'])
+    ->name('certificates.send');
+
+Route::post('/events/{event}/certificates/send-all', [CertificateController::class, 'sendAll'])
+    ->name('certificates.sendAll');
+
+Route::post('/certificates/preview-custom', [CertificateController::class, 'previewCustom'])->name('certificates.preview.custom');
 
 
 });
