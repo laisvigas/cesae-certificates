@@ -7,6 +7,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\ParticipantController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PublicCertificateController;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -64,30 +66,28 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
 
     // Rotas de certificados
 
-// Custom certificate form routes
-Route::get('/certificates/custom', [CertificateController::class, 'custom'])
-    ->name('certificates.custom');
+    // Custom certificate form routes
+    Route::get('/certificates/custom', [CertificateController::class, 'custom'])
+        ->name('certificates.custom');
 
-// 🔁 MUDAR DE GET → POST (precisa para enviar arquivos do form)
-Route::post('/certificates/download-custom', [CertificateController::class, 'certificateDownloadCustom'])
-    ->name('certificates.download.custom');
+    // 🔁 MUDAR DE GET → POST (precisa para enviar arquivos do form)
+    Route::post('/certificates/download-custom', [CertificateController::class, 'certificateDownloadCustom'])
+        ->name('certificates.download.custom');
 
-Route::post('/certificates/send/custom', [CertificateController::class, 'sendCustom'])
-    ->name('certificates.send.custom');
+    Route::post('/certificates/send/custom', [CertificateController::class, 'sendCustom'])
+        ->name('certificates.send.custom');
 
-// Event/participant certificate route (pode continuar assim)
-Route::get('/certificates/download/{event}/{participant}', [CertificateController::class, 'certificateDownload'])
-    ->name('certificates.download');
+    // Event/participant certificate route (pode continuar assim)
+    Route::get('/certificates/download/{event}/{participant}', [CertificateController::class, 'certificateDownload'])
+        ->name('certificates.download');
 
-Route::post('/certificates/send', [CertificateController::class, 'sendCertificate'])
-    ->name('certificates.send');
+    Route::post('/certificates/send', [CertificateController::class, 'sendCertificate'])
+        ->name('certificates.send');
 
-Route::post('/events/{event}/certificates/send-all', [CertificateController::class, 'sendAll'])
-    ->name('certificates.sendAll');
+    Route::post('/events/{event}/certificates/send-all', [CertificateController::class, 'sendAll'])
+        ->name('certificates.sendAll');
 
-Route::post('/certificates/preview-custom', [CertificateController::class, 'previewCustom'])->name('certificates.preview.custom');
-
-
+    Route::post('/certificates/preview-custom', [CertificateController::class, 'previewCustom'])->name('certificates.preview.custom');
 });
 
 // Rota TESTE fora do middleware
@@ -101,3 +101,9 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__.'/auth.php';
 
+// acessar certificado público (sem login)
+Route::get('/c/{publicId}', [PublicCertificateController::class, 'show'])
+    ->name('certificates.public.show');
+
+Route::get('/c/{publicId}/download', [CertificateController::class, 'publicDownloadByPublicId'])
+    ->name('certificates.public.download');
