@@ -62,7 +62,7 @@
                     </div>
                 </div>
 
-                // DUPLICADOS - MUDAR
+                {{-- DUPLICADOS - MUDAR --}}
                 {{-- Card: xxxxx --}}
                 <div class="rounded-xl bg-white shadow-sm ring-1 ring-gray-200 p-4 sm:p-5 flex items-center gap-4">
                     <div class="rounded-lg bg-gray-100 p-3">
