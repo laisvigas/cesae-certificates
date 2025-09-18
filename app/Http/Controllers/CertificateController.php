@@ -33,26 +33,39 @@ class CertificateController extends Controller
     // Generate/find and download PDF for a participant in an event
     public function certificateDownload(Event $event, Participant $participant)
     {
+        // Garante que o participante realmente está vinculado a este evento
         if (!$event->participants()->whereKey($participant->id)->exists()) {
             abort(403, 'Participante não está vinculado a este evento.');
         }
 
+        // Cria (ou busca) o certificado
         $certificate = Certificate::firstOrCreate(
             ['event_id' => $event->id, 'participant_id' => $participant->id],
             ['ref' => strtoupper(Str::random(12)), 'issued_at' => now()]
         );
 
-        // monta dados conforme novo layout (sem overrides ad-hoc)
+        // (Opcional) manter consistência e já garantir public_id/published_at
+        if (empty($certificate->public_id)) {
+            $certificate->public_id = (string) Str::uuid();
+        }
+        if (empty($certificate->published_at)) {
+            $certificate->published_at = now();
+        }
+        $certificate->save();
+
+        // Monta dados e gera o PDF
         $pdfData = $this->buildCertificateData($event, $participant, null, $certificate);
 
-        $dompdf = Dompdf::loadView('certificates.pdf', $pdfData)->setPaper('A4', 'landscape');
-        $pdf = $dompdf->output();
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('certificates.pdf', $pdfData)
+            ->setPaper('A4', 'landscape')
+            ->output();
 
         return response()->streamDownload(
             fn() => print($pdf),
             "certificate-{$participant->name}.pdf"
         );
     }
+
 
     // Generate/find and send participant certificate by email
     public function sendCertificate(Request $request)
@@ -70,12 +83,26 @@ class CertificateController extends Controller
             ['ref' => strtoupper(Str::random(12)), 'issued_at' => now()]
         );
 
+        // Garantir que o certificado tem identificador público e está "publicado"
+        if (empty($certificate->public_id)) {
+            $certificate->public_id = (string) Str::uuid();
+        }
+        if (empty($certificate->published_at)) {
+            $certificate->published_at = now();
+        }
+        $certificate->save();
+
         $pdfData = $this->buildCertificateData($event, $participant, null, $certificate);
 
-        $pdf = Dompdf::loadView('certificates.pdf', $pdfData)->setPaper('A4', 'landscape')->output();
+        // usar o facade Dompdf que já está importado
+        $pdf = Dompdf::loadView('certificates.pdf', $pdfData)
+            ->setPaper('A4', 'landscape')
+            ->output();
 
         if (!empty($participant->email)) {
-            Mail::to($participant->email)->send(new CertificateMail($pdf, $participant->name));
+            // passar também o $certificate para compor o link público no e-mail
+            Mail::to($participant->email)
+                ->send(new CertificateMail($pdf, $participant->name, $certificate));
         }
 
         return back()->with('success', 'Certificado enviado com sucesso para ' . ($participant->email ?: 'o destinatário'));
@@ -96,11 +123,21 @@ class CertificateController extends Controller
                 ['ref' => strtoupper(Str::random(12)), 'issued_at' => now()]
             );
 
+            // garantir public_id/published_at
+            if (empty($certificate->public_id)) {
+                $certificate->public_id = (string) Str::uuid();
+            }
+            if (empty($certificate->published_at)) {
+                $certificate->published_at = now();
+            }
+            $certificate->save();
+
             $pdfData = $this->buildCertificateData($event, $participant, null, $certificate);
             $pdf = Dompdf::loadView('certificates.pdf', $pdfData)->setPaper('A4', 'landscape')->output();
 
             if (!empty($participant->email)) {
-                Mail::to($participant->email)->send(new CertificateMail($pdf, $participant->name));
+                // passar $certificate para ter o link público no corpo do e-mail
+                Mail::to($participant->email)->send(new CertificateMail($pdf, $participant->name, $certificate));
             }
         }
 
@@ -143,6 +180,26 @@ class CertificateController extends Controller
         );
     }
 
+    public function publicDownloadByPublicId(string $publicId)
+    {
+        $cert = Certificate::with(['event.type', 'participant'])
+            ->where('public_id', $publicId)
+            ->whereNotNull('published_at')
+            ->firstOrFail();
+
+        $pdfData = $this->buildCertificateData($cert->event, $cert->participant, null, $cert);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('certificates.pdf', $pdfData)
+            ->setPaper('A4', 'landscape')
+            ->output();
+
+        return response()->streamDownload(
+            fn() => print($pdf),
+            "certificate-{$cert->participant->name}.pdf"
+        );
+    }
+
+
     // Generates PDF and send it to the email provided on the custom form
     public function sendCustom(Request $request)
     {
@@ -165,10 +222,20 @@ class CertificateController extends Controller
             ['ref' => strtoupper(Str::random(12)), 'issued_at' => now()]
         );
 
+        // garantir public_id/published_at (para o link público no e-mail)
+        if (empty($certificate->public_id)) {
+            $certificate->public_id = (string) Str::uuid();
+        }
+        if (empty($certificate->published_at)) {
+            $certificate->published_at = now();
+        }
+        $certificate->save();
+
         $pdfData = $this->buildCertificateData($event, $participant, $request, $certificate);
         $pdf = Dompdf::loadView('certificates.pdf', $pdfData)->setPaper('A4', 'landscape')->output();
 
-        Mail::to($request->input('email'))->send(new CertificateMail($pdf, $participant->name));
+        // passar $certificate
+        Mail::to($request->input('email'))->send(new CertificateMail($pdf, $participant->name, $certificate));
 
         return back()->with('success', 'Certificado enviado com sucesso para ' . $request->input('email'));
     }

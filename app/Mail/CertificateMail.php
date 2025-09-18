@@ -3,11 +3,9 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use App\Models\Certificate as CertificateModel;
 
 class CertificateMail extends Mailable
 {
@@ -15,26 +13,26 @@ class CertificateMail extends Mailable
 
     public $pdf;
     public $name;
+    public $certificate;
 
-    /**
-     * Create a new message instance.
-     */
-    public function __construct($pdf, $name)
+    public function __construct($pdf, $name, CertificateModel $certificate)
     {
         $this->pdf = $pdf;
         $this->name = $name;
+        $this->certificate = $certificate;
     }
 
     public function build()
     {
+        $publicUrl = route('certificates.public.show', $this->certificate->public_id);
+
         return $this->subject('Seu Certificado')
-            ->view('emails.certificate')
-            ->attachData(
-                $this->pdf, "certificate-{$this->name}.pdf", [
+            ->view('emails.certificate', [
+                'name' => $this->name,
+                'publicUrl' => $publicUrl,
+            ])
+            ->attachData($this->pdf, "certificate-{$this->name}.pdf", [
                 'mime' => 'application/pdf',
             ]);
     }
-
-
-
 }
