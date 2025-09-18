@@ -61,8 +61,37 @@
                         <div class="text-sm text-gray-600 truncate">eventos marcados</div>
                     </div>
                 </div>
+
+                {{-- DUPLICADOS - MUDAR --}}
+                {{-- Card: xxxxx --}}
+                <div class="rounded-xl bg-white shadow-sm ring-1 ring-gray-200 p-4 sm:p-5 flex items-center gap-4">
+                    <div class="rounded-lg bg-gray-100 p-3">
+                        <svg class="w-6 h-6" fill="currentColor" aria-hidden="true">
+                        <use href="#ic-event" />
+                        </svg>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-2xl font-bold text-gray-900">{{ $futureEventsCount }}</div>
+                        <div class="text-sm text-gray-600 truncate">eventos marcados</div>
+                    </div>
+                </div>
+
+                {{-- Card: xxxx --}}
+                <div class="rounded-xl bg-white shadow-sm ring-1 ring-gray-200 p-4 sm:p-5 flex items-center gap-4">
+                    <div class="rounded-lg bg-gray-100 p-3">
+                        <svg class="w-6 h-6" fill="currentColor" aria-hidden="true">
+                        <use href="#ic-event" />
+                        </svg>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-2xl font-bold text-gray-900">{{ $futureEventsCount }}</div>
+                        <div class="text-sm text-gray-600 truncate">eventos marcados</div>
+                    </div>
+                </div>
             </div>
+            <hr class="mt-5 mb-5 border-gray-200">
         </div>
+        
 </div>
 
 </x-app-layout>
