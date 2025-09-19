@@ -59,9 +59,6 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
         Route::delete('/participants/{participant}', [ParticipantController::class, 'detachParticipant'])
             ->name('participants.detach');
 
-        // receives a cvs file with participants and attach them all to this event
-        Route::post('/participants/import-csv', [ParticipantController::class, 'importCsv'])
-        ->name('participants.importCsv');
     });
 
     // Rotas de certificados
@@ -90,8 +87,17 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::post('/certificates/preview-custom', [CertificateController::class, 'previewCustom'])->name('certificates.preview.custom');
 });
 
-// Rota TESTE fora do middleware
-Route::post('/test-import-csv/{event}', [ParticipantController::class, 'importCsv']) ->name('participants.importCsvTESTE');
+// Rotas fora do middleware
+
+// Rota para importar ficheiros csv
+Route::post('/import-csv/{event}', [ParticipantController::class, 'importCsv']) ->name('participants.importCsv');
+
+// Rotas de templates
+Route::post('/certificate-templates', [CertificateTemplateController::class, 'store'])
+    ->name('certificate-templates.store');
+
+Route::get('/certificate-templates/{template}', [CertificateTemplateController::class, 'show'])
+    ->name('certificate-templates.show');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

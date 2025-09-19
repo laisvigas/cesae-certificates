@@ -9,9 +9,10 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Mail\CertificateMail;
 use Spatie\LaravelPdf\Facades\Pdf;
-use Barryvdh\DomPDF\Facade\Pdf as Dompdf; // alias Dompdf
+use App\Models\CertificateTemplate;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade\Pdf as Dompdf; // alias Dompdf
 
 class CertificateController extends Controller
 {
@@ -23,7 +24,9 @@ class CertificateController extends Controller
     public function custom()
     {
         $events = Event::with('participants')->orderBy('start_at', 'desc')->get();
-        return view('certificates.custom', compact('events'));
+        $templates = CertificateTemplate::all();
+
+        return view('certificates.custom', compact('events', 'templates'));
     }
 
     // =========================
@@ -326,6 +329,7 @@ class CertificateController extends Controller
             'institution_name' => $institutionName,
 
             // Frases calculadas para o bloco principal
+            'course_line_prefix' => $request?->input('course_line_prefix', ''), // Texto que o usuário pode definir. Por default: "Concluiu com êxito o/a..."
             'duration_phrase'  => $durationPhrase, // "com uma carga horária total de N horas"
             'date_phrase'      => $datePhrase,     // "em DD/MM/AAAA" ou "iniciado em ... até ..."
             'ref'              => $certificate->ref,

@@ -182,3 +182,81 @@ document.addEventListener('DOMContentLoaded', () => {
   // Primeira renderização do preview (se os selects já estiverem preenchidos)
   updatePreview();
 });
+
+
+  /* =======================
+   * 5) Mostrar e Salvar os templates
+   * ======================= */
+document.addEventListener('DOMContentLoaded', () => {
+
+  const templateSelect = document.getElementById('template_id');
+  const btnSaveTemplate = document.getElementById('btnSaveTemplate');
+  const form = document.getElementById('certificateForm');
+
+  const storeUrl = form.dataset.storeUrl; // rota para salvar o template na base de dados
+  const showBaseUrl = form.dataset.showUrl; // rota para buscar os templates da base de daods
+
+  // Save template via AJAX
+  btnSaveTemplate?.addEventListener('click', async () => {
+    const templateName = prompt('Digite um nome para o template:');
+    if (!templateName) return;
+
+    const fd = new FormData(form);
+    fd.append('name', templateName);
+
+    try {
+      const res = await fetch(storeUrl, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+        },
+        body: fd
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        // Add new template to dropdown
+        const opt = document.createElement('option');
+        opt.value = data.template.id;       
+        opt.textContent = data.template.name;
+        opt.selected = true;
+        templateSelect.appendChild(opt);
+        alert('Template salvo com sucesso!');
+    } else {
+        alert(data.message || 'Erro ao salvar o template.');
+    }
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao salvar o template.');
+    }
+  });
+
+  // Load template options when a template is selected
+  templateSelect?.addEventListener('change', async () => {
+    const templateId = templateSelect.value;
+    if (!templateId) return;
+
+    try {
+      const res = await fetch(`${showBaseUrl}/${templateId}`);
+      const data = await res.json();
+
+      // Populate form with saved template values
+      if (data.primary_color) document.getElementById('primary_color').value = data.primary_color;
+      if (data.watermark) document.getElementById('watermark').value = data.watermark;
+      if (data.course_line_prefix) document.getElementById('course_line_prefix').value = data.course_line_prefix;
+
+      //  FALTAM O Logo e a assinatura (podem ser tratados à parte)
+
+      // Trigger color update logic
+      const event = new Event('input', { bubbles: true });
+      document.getElementById('primary_color').dispatchEvent(event);
+
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao carregar o template.');
+    }
+  });
+
+});
+
+

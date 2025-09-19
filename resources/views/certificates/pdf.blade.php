@@ -198,8 +198,30 @@
           $dur    = $duration_phrase ?? null;
           $when   = $date_phrase ?? null;
 
+          // Checa se o título do evento já contém o tipo de evento para evitar repetição de palavras como Curso de Curso Python
+          // Use str_contains to check if the event title includes the event type name
+
+          if (str_contains(Str::lower($event_title), Str::lower($etype))) {
+            /*If it contains it, just use the event title*/
+            $mainPhrase = $event_title;
+            } else {
+            /*Otherwise, combine the event type and event title*/
+            $mainPhrase = "{$etype} " . $event_title;
+            }
+
+          /*Texto que pode ser personalisado pelo usuário*/
+          $prefix = $course_line_prefix ?? 'Concluiu com êxito o/a ';
+
+          /*monta frase final com pontuação certa
+          -> array_filter(): This function removes all empty or null values from an array.
+          -> $parts: temporary array that holds all the individual phrases to combine.
+          -> implode() takes all the elements from an array ($parts) and joins them into a single string.
+          -> The first argument, ', ', specifies the separator to use between each element.
+          -> The final . is added to the end to complete the sentence.
+          -> The complete $sentence variable is then passed to the html.*/
+
           $parts = array_filter([
-            "Concluiu com êxito o {$etype} " . ($event_title ?? $course ?? ''),
+            "{$prefix} {$mainPhrase}",
             $inst ? "da {$inst}" : null,
             $dur,
             $when ? $when : null,
