@@ -4,10 +4,11 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\ParticipantController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PublicCertificateController;
+use App\Http\Controllers\CertificateTemplateController;
 
 
 Route::get('/', function () {
@@ -93,11 +94,16 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
 Route::post('/import-csv/{event}', [ParticipantController::class, 'importCsv']) ->name('participants.importCsv');
 
 // Rotas de templates
+
+Route::get('/certificate-templates', [CertificateTemplateController::class, 'index'])
+        ->name('certificate-templates.index');
+
 Route::post('/certificate-templates', [CertificateTemplateController::class, 'store'])
     ->name('certificate-templates.store');
 
 Route::get('/certificate-templates/{template}', [CertificateTemplateController::class, 'show'])
     ->name('certificate-templates.show');
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

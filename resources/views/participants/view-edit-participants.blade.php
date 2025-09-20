@@ -67,9 +67,6 @@
                     {{-- Toolbar principal (CSV + Enviar todos) --}}
                     <div class="rounded-lg border border-gray-200 bg-white p-4 flex flex-wrap items-center justify-between gap-2">
                         <!-- upload a csv file with participants data and attachs each one of them to this event in data base -->
-                        <!-- USING A TEST ROUTE TO CHECK IF THE FUNCTION IS WORKING (IT IS).
-                             There must be a problem caused by the middleware/security token that is preventing
-                             the original 'participants.importCsv' route to work -->
                         <form action="/import-csv/{{ $event->id }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <label class="cursor-pointer inline-flex items-center gap-2 rounded bg-purple-600 px-3 py-2 text-white text-sm hover:bg-purple-700">

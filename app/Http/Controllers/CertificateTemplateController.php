@@ -11,8 +11,19 @@ class CertificateTemplateController extends Controller
     // 1. List all templates
     public function index()
     {
-        $templates = CertificateTemplate::all();
-        return response()->json($templates);
+        try {
+            $templates = CertificateTemplate::all();
+            return response()->json($templates);
+        } catch (\Exception $e) {
+            // Log the actual error for debugging
+            \Log::error('Error loading certificate templates: ' . $e->getMessage());
+
+            // Return a generic JSON error response to the client
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load templates. Please try again later.'
+            ], 500);
+        }
     }
 
     // 2. Store a new template
@@ -92,7 +103,7 @@ class CertificateTemplateController extends Controller
     // 3. Show a template
     public function show(CertificateTemplate $template)
     {
-        return response()->json(json_decode($template->options, true));
+        return response()->json($template->options); // need to convert options back to json so JS can handle it
     }
 
     // 4. Assign a template to an event

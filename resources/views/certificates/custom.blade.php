@@ -205,6 +205,11 @@
                     </div>
 
                     <!-- Botões -->
+                    <!-- Obs: -> method on <form> sets the default HTTP method for the whole form.
+                        Every submit button will use that method, unless overridden.
+                        -> formmethod on <button> let us override the method per button, without duplicating the form.
+                            The same is true for formaction. This way we can have one form,
+                            two buttons with two different methods (and avoid having to duplicate the input data) -->
                     <div class="pt-2 flex flex-col sm:flex-row gap-2 sm:gap-3">
                         <button
                             type="submit"
