@@ -19,6 +19,8 @@ class Event extends Model
         'issuer_name',
         'issuer_role',
         'issuer_signature_path',
+        // referência ao template
+        'template_id',
     ];
 
     protected $casts = [
@@ -37,6 +39,12 @@ class Event extends Model
     {
         return $this->belongsTo(\App\Models\EventType::class, 'event_type_id');
     }
+
+    public function template()
+    {
+        return $this->belongsTo(CertificateTemplate::class, 'template_id');
+    }
+
 
     // facilita mostrar a imagem de assinatura na view
     public function getIssuerSignatureUrlAttribute(): ?string

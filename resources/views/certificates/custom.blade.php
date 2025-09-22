@@ -30,12 +30,16 @@
                 @endif
 
                 {{-- FORMULÁRIO --}}
+                <!-- data-preview-url,  data-store-url e data-show-url passam as rotas
+                    para as funções no js -->
                 <form
                     id="certificateForm"
                     method="POST"
                     enctype="multipart/form-data"
                     class="space-y-6"
                     data-preview-url="{{ route('certificates.preview.custom') }}"
+                    data-store-url="{{ route('certificate-templates.store') }}"
+                    data-show-url="/certificate-templates"
                 >
                     @csrf
 
@@ -132,13 +136,14 @@
                         </p>
                         </fieldset>
 
-
+                        <!-- Logo (opcional) -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Logo (PNG/JPG)</label>
                             <input type="file" name="logo" accept="image/png,image/jpeg" class="mt-1 block w-full text-sm">
                             <p class="mt-1 text-xs text-gray-500">Opcional. PNG com fundo transparente fica melhor.</p>
                         </div>
 
+                        <!-- Assinatura (opcional) -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Assinatura (PNG/JPG)</label>
                             <input type="file" name="signature" accept="image/png,image/jpeg" class="mt-1 block w-full text-sm">
@@ -171,14 +176,40 @@
                             id="course_line_prefix"
                             name="course_line_prefix"
                             class="mt-1 block w-full rounded border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
-                            placeholder="Ex.: pela conclusão do"
+                            placeholder="Ex.: Concluiu com êxito o/a "
                             value="{{ old('course_line_prefix') }}">
                         <p class="mt-1 text-xs text-gray-500">Deixe em branco para usar “pela conclusão do”.</p>
                     </div>
 
+                    <!-- Selecionar/Salvar Template -->
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="template_id" class="block text-sm font-medium text-gray-700">Selecionar Template</label>
+                            <select name="template_id" id="template_id"
+                                    class="mt-1 block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900">
+                                <option value="">-- Nenhum --</option>
+                                @foreach($templates as $template)
+                                    <option value="{{ $template->id }}" {{ old('template_id', $event->template_id ?? '') == $template->id ? 'selected' : '' }}>
+                                        {{ $template->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
 
+                        <div class="flex items-end gap-2">
+                            <button type="button" id="btnSaveTemplate"
+                                    class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700">
+                                Salvar como Template
+                            </button>
+                        </div>
+                    </div>
 
                     <!-- Botões -->
+                    <!-- Obs: -> method on <form> sets the default HTTP method for the whole form.
+                        Every submit button will use that method, unless overridden.
+                        -> formmethod on <button> let us override the method per button, without duplicating the form.
+                            The same is true for formaction. This way we can have one form,
+                            two buttons with two different methods (and avoid having to duplicate the input data) -->
                     <div class="pt-2 flex flex-col sm:flex-row gap-2 sm:gap-3">
                         <button
                             type="submit"

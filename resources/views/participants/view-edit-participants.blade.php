@@ -47,7 +47,7 @@
                                 <h3 class="text-lg font-semibold text-gray-900 truncate">{{ $event->title }}</h3>
                                     <p class="text-xs text-gray-500">
                                     {!! $event->description ? nl2br(e($event->description)) : '—' !!}
-                                    </p>                                
+                                    </p>
                                 <div class="mt-2 text-sm text-gray-600 flex flex-wrap gap-x-4 gap-y-1">
                                     <span><span class="font-medium">Tipo:</span> {{ optional($event->type)->name ?? '—' }}</span>
                                     <span><span class="font-medium">Início:</span> {{ $event->start_at->format('d/m/Y H:i') }}</span>
@@ -67,10 +67,7 @@
                     {{-- Toolbar principal (CSV + Enviar todos) --}}
                     <div class="rounded-lg border border-gray-200 bg-white p-4 flex flex-wrap items-center justify-between gap-2">
                         <!-- upload a csv file with participants data and attachs each one of them to this event in data base -->
-                        <!-- USING A TEST ROUTE TO CHECK IF THE FUNCTION IS WORKING (IT IS).
-                             There must be a problem caused by the middleware/security token that is preventing
-                             the original 'participants.importCsv' route to work -->
-                        <form action="/test-import-csv/{{ $event->id }}" method="POST" enctype="multipart/form-data">
+                        <form action="/import-csv/{{ $event->id }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <label class="cursor-pointer inline-flex items-center gap-2 rounded bg-purple-600 px-3 py-2 text-white text-sm hover:bg-purple-700">
                                 <svg class="w-5 h-5" fill="currentColor" aria-hidden="true"><use href="#ms-upload_file"/></svg>

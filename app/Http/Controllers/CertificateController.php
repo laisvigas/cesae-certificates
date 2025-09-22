@@ -9,9 +9,10 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Mail\CertificateMail;
 use Spatie\LaravelPdf\Facades\Pdf;
-use Barryvdh\DomPDF\Facade\Pdf as Dompdf; // alias Dompdf
+use App\Models\CertificateTemplate;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade\Pdf as Dompdf; // alias Dompdf
 
 class CertificateController extends Controller
 {
@@ -23,7 +24,9 @@ class CertificateController extends Controller
     public function custom()
     {
         $events = Event::with('participants')->orderBy('start_at', 'desc')->get();
-        return view('certificates.custom', compact('events'));
+        $templates = CertificateTemplate::all();
+
+        return view('certificates.custom', compact('events', 'templates'));
     }
 
     // =========================
@@ -53,8 +56,11 @@ class CertificateController extends Controller
         }
         $certificate->save();
 
+        // Busca o template do evento para usar suas opções
+        $template = $event->certificateTemplate;
+
         // Monta dados e gera o PDF
-        $pdfData = $this->buildCertificateData($event, $participant, null, $certificate);
+        $pdfData = $this->buildCertificateData($event, $participant, null, $certificate, $template);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('certificates.pdf', $pdfData)
             ->setPaper('A4', 'landscape')
@@ -92,7 +98,10 @@ class CertificateController extends Controller
         }
         $certificate->save();
 
-        $pdfData = $this->buildCertificateData($event, $participant, null, $certificate);
+        // Busca o template do evento para usar suas opções
+        $template = $event->certificateTemplate;
+
+        $pdfData = $this->buildCertificateData($event, $participant, null, $certificate, $template);
 
         // usar o facade Dompdf que já está importado
         $pdf = Dompdf::loadView('certificates.pdf', $pdfData)
@@ -117,6 +126,9 @@ class CertificateController extends Controller
             return back()->with('error', 'Não há participantes para este evento.');
         }
 
+        // Busca o template do evento para usar suas opções
+        $template = $event->certificateTemplate;
+
         foreach ($participants as $participant) {
             $certificate = Certificate::firstOrCreate(
                 ['event_id' => $event->id, 'participant_id' => $participant->id],
@@ -132,7 +144,7 @@ class CertificateController extends Controller
             }
             $certificate->save();
 
-            $pdfData = $this->buildCertificateData($event, $participant, null, $certificate);
+            $pdfData = $this->buildCertificateData($event, $participant, null, $certificate, $template);
             $pdf = Dompdf::loadView('certificates.pdf', $pdfData)->setPaper('A4', 'landscape')->output();
 
             if (!empty($participant->email)) {
@@ -169,7 +181,10 @@ class CertificateController extends Controller
             ['ref' => strtoupper(Str::random(12)), 'issued_at' => now()]
         );
 
-        $pdfData = $this->buildCertificateData($event, $participant, $request, $certificate);
+        // Busca o template selecionado
+        $template = $request->filled('template_id') ? CertificateTemplate::findOrFail($request->input('template_id')) : null;
+
+        $pdfData = $this->buildCertificateData($event, $participant, $request, $certificate, $template);
 
         $dompdf = Dompdf::loadView('certificates.pdf', $pdfData)->setPaper('A4', 'landscape');
         $pdf = $dompdf->output();
@@ -187,7 +202,10 @@ class CertificateController extends Controller
             ->whereNotNull('published_at')
             ->firstOrFail();
 
-        $pdfData = $this->buildCertificateData($cert->event, $cert->participant, null, $cert);
+        // Busca o template do evento para a geração do PDF
+        $template = $cert->event->certificateTemplate;
+
+        $pdfData = $this->buildCertificateData($cert->event, $cert->participant, null, $cert, $template);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('certificates.pdf', $pdfData)
             ->setPaper('A4', 'landscape')
@@ -207,7 +225,7 @@ class CertificateController extends Controller
             'event_id'           => 'required|exists:events,id',
             'participant_id'     => 'required|exists:participants,id',
             'email'              => 'required|email',
-            'course_line_prefix' => ['nullable','string','max:120'], // mantido para compatibilidade
+            'course_line_prefix' => ['nullable','string','max:120'],
             'watermark'          => ['nullable','string','max:80'],
             'primary_color'      => ['nullable','regex:/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/'],
             'logo'               => ['nullable','image','mimes:png,jpg,jpeg','max:1024'],
@@ -231,7 +249,11 @@ class CertificateController extends Controller
         }
         $certificate->save();
 
-        $pdfData = $this->buildCertificateData($event, $participant, $request, $certificate);
+        // Busca o template selecionado
+        $template = $request->filled('template_id') ? CertificateTemplate::findOrFail($request->input('template_id')) : null;
+
+
+        $pdfData = $this->buildCertificateData($event, $participant, $request, $certificate, $template);
         $pdf = Dompdf::loadView('certificates.pdf', $pdfData)->setPaper('A4', 'landscape')->output();
 
         // passar $certificate
@@ -246,7 +268,7 @@ class CertificateController extends Controller
         $request->validate([
             'event_id'           => 'required|exists:events,id',
             'participant_id'     => 'required|exists:participants,id',
-            'course_line_prefix' => ['nullable','string','max:120'], // mantido para compatibilidade
+            'course_line_prefix' => ['nullable','string','max:120'],
             'watermark'          => ['nullable','string','max:80'],
             'primary_color'      => ['nullable','regex:/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/'],
             'logo'               => ['nullable','image','mimes:png,jpg,jpeg','max:1024'],
@@ -256,12 +278,18 @@ class CertificateController extends Controller
         $event       = Event::with('type')->findOrFail($request->input('event_id'));
         $participant = Participant::findOrFail($request->input('participant_id'));
 
+        // Fetch the selected template if one is provided
+        $template = null;
+        if ($request->filled('template_id')) {
+            $template = CertificateTemplate::findOrFail($request->input('template_id'));
+        }
+
         $certificate = Certificate::firstOrCreate(
             ['event_id' => $event->id, 'participant_id' => $participant->id],
             ['ref' => strtoupper(Str::random(12)), 'issued_at' => now()]
         );
 
-        $pdfData = $this->buildCertificateData($event, $participant, $request, $certificate);
+        $pdfData = $this->buildCertificateData($event, $participant, $request, $certificate,  $template);
         $pdfData['preview_mode'] = true;
 
         return view('certificates.pdf', $pdfData);
@@ -272,11 +300,11 @@ class CertificateController extends Controller
     // =========================
 
     /**
-     * Monta todos os dados necessários para a Blade do certificado conforme o layout novo.
+     * Monta todos os dados necessários para a Blade do certificado conforme o layout novo (monta um array com os dados).
      * - frase "Concluiu com êxito…" com tipo, título, instituição, horas e datas
      * - assinatura do evento (ou ad-hoc do form), watermark, cor, logo etc.
      */
-    private function buildCertificateData(Event $event, Participant $participant, ?Request $request, Certificate $certificate): array
+    private function buildCertificateData(Event $event, Participant $participant, ?Request $request, Certificate $certificate, ?CertificateTemplate $template = null): array
     {
         // Tipo e instituição
         $eventTypeName   = optional($event->type)->name ?? 'evento';
@@ -288,7 +316,7 @@ class CertificateController extends Controller
         $h = $event->hours;
         if (is_numeric($h) && (int)$h > 0) {
             $h = (int)$h;
-            $durationPhrase = 'com uma carga horária total de ' . $h . ' ' . ($h === 1 ? 'hora' : 'horas');
+            $durationPhrase = 'com carga horária total de ' . $h . ' ' . ($h === 1 ? 'hora' : 'horas');
         }
 
         // Datas (mesmo dia vs intervalo)
@@ -297,26 +325,23 @@ class CertificateController extends Controller
         $end   = $event->end_at;
         if ($start && $end) {
             if ($start->isSameDay($end)) {
-                $datePhrase = 'em ' . $end->format('d/m/Y');
+                $datePhrase = 'realizado em ' . $end->format('d/m/Y');
             } else {
-                $datePhrase = 'iniciado em ' . $start->format('d/m/Y') . ' até ' . $end->format('d/m/Y');
+                $datePhrase = 'realizado no período de ' . $start->format('d/m/Y') . ' a ' . $end->format('d/m/Y');
             }
         }
 
-        // Assinatura: prioriza a enviada no form; senão usa a do evento (storage público)
-        $signatureBase64 = null;
-        if ($request && $request->hasFile('signature')) {
-            $signatureBase64 = $this->fileToBase64($request->file('signature'));
-        } elseif (!empty($event->issuer_signature_path) && Storage::disk('public')->exists($event->issuer_signature_path)) {
-            $signatureBase64 = $this->filePathToBase64(Storage::disk('public')->path($event->issuer_signature_path));
-        }
-
-        // Logo opcional via form
-        $logoBase64 = ($request && $request->hasFile('logo')) ? $this->fileToBase64($request->file('logo')) : null;
-
         // Cor e watermark
-        $primaryColor = $request && $request->filled('primary_color') ? (string)$request->input('primary_color') : '#000000';
-        $watermark    = $request && $request->filled('watermark') ? trim((string)$request->input('watermark')) : null;
+        $primaryColor = $request && $request->filled('primary_color') ? (string)$request->input('primary_color') : ($template ? (string)$template->options['primary_color'] : '#000000');
+        $watermark = $request && $request->filled('watermark') ? trim((string)$request->input('watermark')) : ($template ? (string)$template->options['watermark'] : null);
+
+        // A frase principal sobre o curso pode vir do request, do template ou usar o valor padrão.
+        $courseLinePrefix = $request?->input('course_line_prefix') ?? $template?->course_line_prefix ?? 'Concluiu com êxito o/a ';
+
+        // Logo e Assinatura (prioriza a enviada no form; senão usa a do template (storage público))
+        $logoBase64 = $this->getCertificateImageBase64($request, $template, 'logo');
+        $signatureBase64 = $this->getCertificateImageBase64($request, $template, 'signature', $event);
+
 
         return [
             // Cabeçalho e identificação
@@ -326,6 +351,7 @@ class CertificateController extends Controller
             'institution_name' => $institutionName,
 
             // Frases calculadas para o bloco principal
+            'course_line_prefix' => $courseLinePrefix, // Texto que o usuário pode definir. Por default: "Concluiu com êxito o/a..."
             'duration_phrase'  => $durationPhrase, // "com uma carga horária total de N horas"
             'date_phrase'      => $datePhrase,     // "em DD/MM/AAAA" ou "iniciado em ... até ..."
             'ref'              => $certificate->ref,
@@ -340,26 +366,69 @@ class CertificateController extends Controller
         ];
     }
 
-    // Converte UploadedFile em data URI base64
-    protected function fileToBase64(?\Illuminate\Http\UploadedFile $file): ?string
+    /**
+     * Converte o conteúdo de um arquivo para uma string Base64 com o MIME type.
+     *
+     * @param string $fileContent
+     * @param string $mimeType
+     * @return string
+     */
+    private function fileContentToBase64(string $fileContent, string $mimeType): string
     {
-        if (!$file) return null;
-        $data = file_get_contents($file->getRealPath());
-        if ($data === false) return null;
-        $mime = $file->getMimeType() ?: 'image/png';
-        return 'data:' . $mime . ';base64,' . base64_encode($data);
+        return 'data:' . $mimeType . ';base64,' . base64_encode($fileContent);
     }
 
-    // Converte um caminho absoluto (ex.: do storage público) em data URI base64
-    protected function filePathToBase64(string $absolutePath): ?string
+    /**
+     * Obtém o conteúdo de uma imagem de acordo com a hierarquia de prioridade.
+     *
+     * @param Request|null $request
+     * @param CertificateTemplate|null $template
+     * @param string $type ('logo' ou 'signature')
+     * @param Event|null $event
+     * @return string|null
+     */
+    private function getCertificateImageBase64(?Request $request, ?CertificateTemplate $template, string $type, ?Event $event = null): ?string
     {
-        if (!is_file($absolutePath)) return null;
-        $data = file_get_contents($absolutePath);
-        if ($data === false) return null;
+        $fileContent = null;
+        $mimeType = null;
 
-        $mime = function_exists('mime_content_type') ? mime_content_type($absolutePath) : null;
-        if (!$mime) $mime = 'image/png';
+        // Prioridade 1: Arquivo enviado na requisição
+        if ($request && $request->hasFile($type)) {
+            $uploadedFile = $request->file($type);
+            $fileContent = $uploadedFile->get();
+            $mimeType = $uploadedFile->getMimeType();
+        }
 
-        return 'data:' . $mime . ';base64,' . base64_encode($data);
+        // Prioridade 2: Caminho do template
+        if (!$fileContent && $template && !empty($template->options[$type . '_path'])) {
+            $path = $template->options[$type . '_path'];
+            if (Storage::disk('public')->exists($path)) {
+                $fileContent = Storage::disk('public')->get($path);
+                $mimeType = Storage::disk('public')->mimeType($path);
+            }
+        }
+
+        // Prioridade 3: Caminho do evento (apenas para assinatura)
+        if ($type === 'signature' && !$fileContent && !empty($event->issuer_signature_path)) {
+            $path = $event->issuer_signature_path;
+            if (Storage::disk('public')->exists($path)) {
+                $fileContent = Storage::disk('public')->get($path);
+                $mimeType = Storage::disk('public')->mimeType($path);
+            }
+        }
+
+        return $fileContent ? $this->fileContentToBase64($fileContent, $mimeType) : null;
     }
+    // OBS:
+    // MIME, or Multipurpose Internet Mail Extensions, is a standard that extends the format of email
+    // to support a much wider range of content than just plain text. It allows you to send and receive files like
+    // images, audio, and video, as well as text in different character sets and with rich formatting.
+    // A MIME type, also known as a media type, is a standardized label used to identify the format of a file.
+    // It acts like a file extension for the internet, telling a web browser, email client, or other application
+    // what kind of data it's dealing with and how to process it. For example, a web server sends a MIME type
+    // along with a file so your browser knows if it's supposed to render an image, play a video, or open a PDF.
+    // A Base64-encoded string is a way of representing binary data, such as images, audio files, or
+    // executable files, in a text-only format. It's essentially a method for translating binary data
+    // (which uses 0s and 1s) into a sequence of printable characters from the ASCII character set.
+    // The name "Base64" comes from the fact that it uses a 64-character alphabet to represent the data.
 }
