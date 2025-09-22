@@ -2,7 +2,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   /* =======================
-   * 1) Botão "enviar por e-mail" (em outra view)
+   * 1) Botão "enviar por e-mail" (na view view-edit-participants.blade.php, preenche o formulario coulto com os dados do participante)
    * ======================= */
   (() => {
     const emailButtons = document.querySelectorAll('[data-cert-email]');
@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   /* =======================
-   * 5) Mostrar e Salvar os templates
+   * 5) Mostrar e Salvar os templates na custom.blade
    * ======================= */
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -263,3 +263,106 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+
+  /* =======================
+   * 6) Mostrar e Vincular/Descincular os templates a um evento na view-edit-participant.blade
+   * ======================= */
+document.addEventListener("DOMContentLoaded", () => {
+    // Seleciona todos os selects com data-template-select
+    const templateSelects = document.querySelectorAll("[data-template-select]");
+
+    templateSelects.forEach(select => {
+        select.addEventListener("change", function () {
+            const form = this.closest("form");
+
+            // Lê os atributos data-* do form
+            const assignBaseUrl = form.dataset.assignBaseUrl;
+            const unassignUrl   = form.dataset.unassignUrl;
+            const selectedTemplateId = this.value;
+
+            if (selectedTemplateId) {
+                // Se foi selecionado um template, define rota para "assign"
+                form.action = `${assignBaseUrl}/${selectedTemplateId}/assign-to-event`;
+                form.method = "POST";
+            } else {
+                // Se selecionou "Nenhum", define rota para "unassign"
+                form.action = unassignUrl;
+                form.method = "POST"; // poderia ser DELETE se tua rota aceitar
+            }
+
+            form.submit();
+        });
+    });
+});
+
+  /* =======================
+   * 7) Preview na view view-edit-participant.blade.php
+   * ======================= */
+
+document.addEventListener('DOMContentLoaded', () => {
+  const participantItems = document.querySelectorAll('.participant-item');
+
+  participantItems.forEach(item => {
+    const frame = item.querySelector('.floating-preview-frame');
+    const participantId = item.getAttribute('data-participant-id');
+    const eventId = item.getAttribute('data-event-id');
+    const previewUrl = item.getAttribute('data-preview-url');
+
+    let isLoaded = false;
+
+    // Função para carregar o preview
+    async function loadPreview() {
+      if (isLoaded) return; // Não recarrega se já foi carregado
+
+      try {
+        // Envia uma requisição GET ou POST para a URL do preview
+        const url = previewUrl + '?preview=1';
+        const res = await fetch(url, { method: 'POST', body: new URLSearchParams({
+          _token: document.querySelector('meta[name="csrf-token"]').content,
+          participant_id: participantId,
+          event_id: eventId
+        })});
+
+        const html = await res.text();
+        frame.srcdoc = html;
+        isLoaded = true; // Marca como carregado
+      } catch (e) {
+        console.error('Falha ao carregar o preview', e);
+      }
+    }
+
+    item.addEventListener('mouseenter', loadPreview);
+  });
+});
+
+
+
+/* =======================
+* 8) Botão de importar participnates de outro evento
+* ======================= */
+document.addEventListener('DOMContentLoaded', function () {
+    const openBtn = document.getElementById('openImportModal');
+    const closeBtn = document.getElementById('closeImportModal');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const modal = document.getElementById('importModal');
+
+    if (openBtn) {
+        openBtn.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+        });
+    }
+
+    [closeBtn, cancelBtn].forEach(btn => {
+        if (btn) {
+            btn.addEventListener('click', () => {
+                modal.classList.add('hidden');
+            });
+        }
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
+});

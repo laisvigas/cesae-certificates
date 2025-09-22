@@ -92,12 +92,19 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
         ->name('certificates.sendAll');
 
     Route::post('/certificates/preview-custom', [CertificateController::class, 'previewCustom'])->name('certificates.preview.custom');
+
+    Route::post('/certificates/preview-certificates', [CertificateController::class, 'preview'])->name('certificates.preview');
 });
 
 // Rotas fora do middleware
 
 // Rota para importar ficheiros csv
 Route::post('/import-csv/{event}', [ParticipantController::class, 'importCsv']) ->name('participants.importCsv');
+
+// Importar participantes de outro evento
+Route::post('/import-participants', [ParticipantController::class, 'importFromEventSimple'])
+    ->name('participants.importFromEventSimple');
+
 
 // Rotas de templates
 
@@ -109,6 +116,13 @@ Route::post('/certificate-templates', [CertificateTemplateController::class, 'st
 
 Route::get('/certificate-templates/{template}', [CertificateTemplateController::class, 'show'])
     ->name('certificate-templates.show');
+
+Route::post('/templates/{template}/assign-to-event', [CertificateTemplateController::class, 'assignToEvent'])
+    ->name('templates.assignToEvent');
+
+Route::post('/templates/unassign-from-event/{event}', [CertificateTemplateController::class, 'unassignFromEvent'])
+    ->name('templates.unassignFromEvent');
+
 
 
 Route::middleware('auth')->group(function () {
