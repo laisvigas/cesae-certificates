@@ -39,30 +39,34 @@ class CertificateTemplateController extends Controller
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'event_id' => 'nullable|exists:events,id',
+                'logo' => 'nullable|file|mimes:jpeg,png,jpg,svg|max:2048',
+                'signature' => 'nullable|file|mimes:jpeg,png,jpg,svg|max:2048',
             ]);
 
-            // Coleta todas as opções personalizadas do certificado
+            // ---------- Coleta todas as opções personalizadas do certificado:
+
+            // Coleta de strings
             $options = $request->only([
                 'primary_color',
                 'watermark',
                 'course_line_prefix',
-                'logo',
-                'signature',
             ]);
 
             // Uploads de logo e assinatura
             if ($request->hasFile('logo')) {
+                // Guarda o ficheiro em 'storage/app/public/certificate_logos'
                 $options['logo_path'] = $request->file('logo')->store('certificate_logos', 'public');
             }
 
             if ($request->hasFile('signature')) {
+                // Guarda o ficheiro em 'storage/app/public/certificate_signatures'
                 $options['signature_path'] = $request->file('signature')->store('certificate_signatures', 'public');
             }
 
             // Criação do template
             $template = CertificateTemplate::create([
                 'name'    => $validated['name'],
-                'options' => $options,
+                'options' => $options, // Laravel automatically handles JSON encoding here due to the $casts property on Model
             ]);
 
             // Se houver um evento selecionado, vincula o template

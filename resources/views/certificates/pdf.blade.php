@@ -222,7 +222,7 @@
 
           $parts = array_filter([
             "{$prefix} {$mainPhrase}",
-            $inst ? "da {$inst}" : null,
+            $inst ? "promovido por {$inst}" : null,
             $dur,
             $when ? $when : null,
           ]);

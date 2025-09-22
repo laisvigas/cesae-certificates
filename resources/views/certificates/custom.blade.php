@@ -176,7 +176,7 @@
                             id="course_line_prefix"
                             name="course_line_prefix"
                             class="mt-1 block w-full rounded border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900"
-                            placeholder="Ex.: pela conclusão do"
+                            placeholder="Ex.: Concluiu com êxito o/a "
                             value="{{ old('course_line_prefix') }}">
                         <p class="mt-1 text-xs text-gray-500">Deixe em branco para usar “pela conclusão do”.</p>
                     </div>
