@@ -9,6 +9,7 @@ use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\ParticipantController;
 use App\Http\Controllers\PublicCertificateController;
 use App\Http\Controllers\CertificateTemplateController;
+use App\Http\Controllers\NoteController;
 
 
 Route::get('/', function () {
@@ -20,6 +21,11 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::get('/dashboard', DashboardController::class)
         ->middleware(['verified'])
         ->name('dashboard');
+
+    // Notas: criar, editar, atualizar, apagar
+    Route::resource('/notes', NoteController::class)
+        ->only(['store','edit','update','destroy']);
+
 
     // Rotas de eventos
     Route::get('/events', [EventController::class, 'indexEvent'])->name('events.index');
