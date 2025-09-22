@@ -53,7 +53,7 @@
                 <div class="rounded-xl bg-white shadow-sm ring-1 ring-gray-200 p-4 sm:p-5 flex items-center gap-4">
                     <div class="rounded-lg bg-gray-100 p-3">
                         <svg class="w-6 h-6" fill="currentColor" aria-hidden="true">
-                        <use href="#ic-event" />
+                        <use href="#ic-scheduled" />
                         </svg>
                     </div>
                     <div class="min-w-0">
@@ -62,20 +62,21 @@
                     </div>
                 </div>
 
-                {{-- DUPLICADOS - MUDAR --}}
-                {{-- Card: xxxxx --}}
+                
+                {{-- Card: scheduled --}}
                 <div class="rounded-xl bg-white shadow-sm ring-1 ring-gray-200 p-4 sm:p-5 flex items-center gap-4">
                     <div class="rounded-lg bg-gray-100 p-3">
                         <svg class="w-6 h-6" fill="currentColor" aria-hidden="true">
-                        <use href="#ic-event" />
+                        <use href="#ic-ongoing" />
                         </svg>
                     </div>
                     <div class="min-w-0">
-                        <div class="text-2xl font-bold text-gray-900">{{ $futureEventsCount }}</div>
-                        <div class="text-sm text-gray-600 truncate">eventos marcados</div>
+                        <div class="text-2xl font-bold text-gray-900">{{ $currentEventsCount }}</div>
+                        <div class="text-sm text-gray-600 truncate">eventos a decorrer</div>
                     </div>
                 </div>
 
+                {{-- DUPLICADO - MUDAR --}}
                 {{-- Card: xxxx --}}
                 <div class="rounded-xl bg-white shadow-sm ring-1 ring-gray-200 p-4 sm:p-5 flex items-center gap-4">
                     <div class="rounded-lg bg-gray-100 p-3">
@@ -84,8 +85,8 @@
                         </svg>
                     </div>
                     <div class="min-w-0">
-                        <div class="text-2xl font-bold text-gray-900">{{ $futureEventsCount }}</div>
-                        <div class="text-sm text-gray-600 truncate">eventos marcados</div>
+                        <div class="text-2xl font-bold text-gray-900">{{ $eventType }}</div>
+                        <div class="text-sm text-gray-600 truncate">tipos de eventos oferecidos</div>
                     </div>
                 </div>
             </div>

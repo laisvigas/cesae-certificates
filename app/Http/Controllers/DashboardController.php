@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Participant;
 use App\Models\Certificate;
 use App\Models\Event;
+use App\Models\EventType;
 use Illuminate\Support\Carbon;
+
 
 class DashboardController extends Controller
 {
@@ -22,11 +24,19 @@ public function __invoke()
         // Eventos futuros (ainda vão começar)
         $futureEventsCount = $this->futureEventsCount($now);
 
+        // Eventos a decorrer (começaram antes de agora e ainda não terminaram)
+        $currentEventsCount = $this->currentEventsCount($now);
+
+        // tipos de eventos oferecidos
+        $eventType = $this->eventType();
+
         return view('dashboard', [
             'allParticipantsCount' => $allParticipantsCount,
             'certificatesCount'    => $certificatesCount,
             'pastEventsCount'      => $pastEventsCount,
             'futureEventsCount'    => $futureEventsCount,
+            'currentEventsCount'   => $currentEventsCount,
+            'eventType'            => $eventType,
         ]);
     }
 
@@ -50,6 +60,22 @@ public function __invoke()
     {
         return Event::whereNotNull('start_at')
             ->where('start_at', '>=', $now)
+            ->count();
+    }
+
+    // a decorrer
+    private function currentEventsCount(Carbon $now): int
+    {
+        return Event::whereNotNull('start_at')
+            ->where('start_at', '<=', $now)  
+            ->where('end_at', '>=', $now)     
+            ->count();
+    }
+
+    // tipos de eventos oferecidos
+    private function eventType(): int
+    {
+        return eventType::whereNotNull('name')  
             ->count();
     }
 
