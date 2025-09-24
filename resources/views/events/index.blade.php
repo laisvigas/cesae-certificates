@@ -5,7 +5,7 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight truncate">
                 Lista de Eventos
             </h2>
-            <a href="{{ route('events.create') }}" class="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded bg-green-500 text-white text-sm hover:bg-gray-800">
+            <a href="{{ route('events.create') }}" class="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded bg-green-500 text-white text-sm hover:bg-green-800">
                 <svg class="w-5 h-5" fill="currentColor" aria-hidden="true">
                     <use href="#ms-add" />
                 </svg>
