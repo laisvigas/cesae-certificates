@@ -442,3 +442,44 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
+/* =======================
+* 10) Botão apagar template na custom.blade
+* ======================= */
+
+document.getElementById('btnDeleteTemplate')?.addEventListener('click', async function() {
+    const select = document.getElementById('template_id');
+    const templateId = select.value;
+
+    if (!templateId) {
+        alert('Selecione um template para apagar.');
+        return;
+    }
+
+    if (!confirm('Tem certeza que deseja apagar este template?')) return;
+
+    try {
+        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        const response = await fetch(`/certificate-templates/${templateId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': token,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert(data.message);
+            // Remove do dropdown
+            select.querySelector(`option[value="${templateId}"]`).remove();
+        } else {
+            alert(data.message || 'Erro ao apagar template.');
+        }
+    } catch (error) {
+        console.error(error);
+        alert('Erro ao apagar template.');
+    }
+});

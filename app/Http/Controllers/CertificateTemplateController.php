@@ -144,4 +144,27 @@ class CertificateTemplateController extends Controller
         ->back()
         ->with('success', 'Template desvinculado ao evento com sucesso.');
     }
+
+
+    // 6. Delete a template
+    public function destroy(CertificateTemplate $template)
+    {
+        try {
+            $template->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Template apagado com sucesso.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao apagar o template',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+
 }

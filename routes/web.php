@@ -123,6 +123,10 @@ Route::post('/templates/{template}/assign-to-event', [CertificateTemplateControl
 Route::post('/templates/unassign-from-event/{event}', [CertificateTemplateController::class, 'unassignFromEvent'])
     ->name('templates.unassignFromEvent');
 
+Route::delete('/certificate-templates/{template}', [CertificateTemplateController::class, 'destroy'])
+    ->name('certificate-templates.destroy');
+
+
 
 
 Route::middleware('auth')->group(function () {
