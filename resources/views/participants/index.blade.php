@@ -122,7 +122,7 @@
 
                                         {{-- Eventos passados (não vinculado, mas com certificado) --}}
                                         <div class="lg:col-span-3 mt-2">
-                                            <dt class="font-semibold text-gray-700">Eventos em que esteve inscrito no passados </dt>
+                                            <dt class="font-semibold text-gray-700">Eventos em que o participante já esteve vinculado e atualmente não está mais </dt>
                                             <dd class="text-gray-900">
                                                 @php
                                                     $pastCertificates = $participant->certificates->filter(fn($c) => !$participant->events->contains('id', $c->event_id));
