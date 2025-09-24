@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\Certificate;
 use App\Models\Participant;
 use Illuminate\Http\Request;
 use App\Models\CertificateTemplate;
@@ -10,12 +11,19 @@ use Illuminate\Support\Facades\Validator;
 
 class ParticipantController extends Controller
 {
-    public function indexParticipants() // NOT USED! // show all participants stored in the participants table
+    public function indexParticipants()
     {
-        $participants = Participant::orderBy('name', 'asc')->get();
+        $participants = Participant::with([
+            'events',
+            'certificates.event'
+        ])->orderBy('name')->get();
 
-        return view('participants.index', compact('participants'));
+        $totalParticipants = $participants->count();
+
+        return view('participants.index', compact('participants', 'totalParticipants'));
     }
+
+
 
     public function showParticipantsInEvent(Event $event) // fetch participants for this one event
     {
