@@ -26,53 +26,25 @@ class EventController extends Controller
 
         $eventsQuery = Event::with('type')
             ->withCount('participants')
-            ->orderBy('start_at', 'desc');
+            ->orderBy('start_at', 'desc')
+            ->filterTypes($selected)
+            ->filterStatus($selectedStatus, $now);
 
-        if (!empty($selected)) {
-            $wantsNull = in_array('null', $selected, true);
-            $ids = array_filter($selected, fn ($v) => $v !== 'null');
+        $events = $eventsQuery
+            ->paginate(20)
+            ->withQueryString();
 
-            $eventsQuery->where(function ($q) use ($ids, $wantsNull) {
-                if (!empty($ids)) {
-                    $q->whereIn('event_type_id', $ids);
-                }
-                if ($wantsNull) {
-                    $q->orWhereNull('event_type_id');
-                }
-            });
-        }
+        $totalAllEvents = Event::count();
 
-        if (!empty($selectedStatus)) {
-            $eventsQuery->where(function ($q) use ($selectedStatus, $now) {
-                if (in_array('past', $selectedStatus, true)) {
-                    $q->orWhere('end_at', '<', $now);
-                }
-                if (in_array('ongoing', $selectedStatus, true)) {
-                    $q->orWhere(function ($qq) use ($now) {
-                        $qq->where('start_at', '<=', $now)
-                           ->where('end_at', '>=', $now);
-                    });
-                }
-                if (in_array('upcoming', $selectedStatus, true)) {
-                    $q->orWhere('start_at', '>', $now);
-                }
-            });
-        }
-
-        $events = $eventsQuery->get();
-
-        return view('events.index', [
-            'events'         => $events,
-            'types'          => $types,
-            'selected'       => $selected,
-            'selectedStatus' => $selectedStatus,
-        ]);
+        return view('events.index', compact('events','types','selected','selectedStatus', 'totalAllEvents'));
     }
+
 
     public function createEvent()
     {
         $types = EventType::orderBy('name')->get();
-        return view('events.create-event', compact('types'));
+        $event = new Event();
+        return view('events.create-event', compact('types', 'event'));
     }
 
     public function storeEvent(Request $request)
@@ -103,26 +75,20 @@ class EventController extends Controller
         return redirect()->route('events.index')->with('success', 'Evento criado com sucesso!');
     }
 
-    public function deleteEvent($id)
+    public function viewEditEvent(Event $event)
     {
-        $event = Event::findOrFail($id);
+        $types = EventType::orderBy('name')->get();
+        return view('events.view-edit-event', compact('event', 'types'));
+    }
 
-        // (Opcional) apagar assinatura associada ao evento ao deletar
+    public function deleteEvent(Event $event)
+    {
         if ($event->issuer_signature_path && Storage::disk('public')->exists($event->issuer_signature_path)) {
             Storage::disk('public')->delete($event->issuer_signature_path);
         }
-
         $event->delete();
 
         return redirect()->route('events.index')->with('success', 'Evento removido com sucesso!');
-    }
-
-    public function viewEditEvent($id)
-    {
-        $event = Event::with('type')->findOrFail($id);
-        $types = EventType::orderBy('name')->get();
-
-        return view('events.view-edit-event', compact('event', 'types'));
     }
 
     public function updateEvent(Request $request)
