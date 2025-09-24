@@ -34,7 +34,7 @@ function handleCancelEdit(btn) {
 // Envia certificado por email (preenche o form oculto e submete)
 function handleSendCertEmail(btn) {
   const form = document.getElementById('certificate-email-form');
-  if (!form) return console.warn('certificate-email-form não encontrado');
+  if (!form) return;
 
   const participantId = btn.getAttribute('data-participant-id');
   const eventId = btn.getAttribute('data-event-id');
