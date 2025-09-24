@@ -30,8 +30,8 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     // Rotas de eventos
     Route::get('/events', [EventController::class, 'indexEvent'])->name('events.index');
     Route::get('/events/create-event', [EventController::class, 'createEvent'])->name('events.create');
-    Route::get('/event-delete/{id}', [EventController::class, 'deleteEvent'])->name('events.delete');
-    Route::get('/events/view-edit-event/{id}', [EventController::class, 'viewEditEvent']) -> name('events.view-edit');
+    Route::get('/events/{event}/edit', [EventController::class, 'viewEditEvent'])->name('events.view-edit');
+    Route::delete('/events/{event}', [EventController::class, 'deleteEvent'])->name('events.delete');
     Route::put('/event-update', [EventController::class, 'updateEvent']) -> name('events.update');
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
 
