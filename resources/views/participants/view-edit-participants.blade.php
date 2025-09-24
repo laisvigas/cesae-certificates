@@ -256,20 +256,21 @@
 
                 {{-- ===================== Barra de busca simples ===================== --}}
                 <div class="mb-4 flex flex-col sm:flex-row sm:items-center gap-2">
-                    <form method="GET" class="flex items-center gap-2">
-                        {{-- mantém outros parâmetros (se houver) ao buscar --}}
-                        <input type="hidden" name="keep" value="1">
-                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Procurar por nome ou email"
-                               class="w-full sm:w-80 rounded border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-gray-900">
-                        <button class="rounded bg-gray-900 px-3 py-2 text-white text-sm hover:bg-gray-800">Buscar</button>
-                        @if(request('q'))
-                            <a href="{{ route('participants.view-edit', $event->id) }}" class="rounded border px-3 py-2 text-sm hover:bg-gray-50">Limpar</a>
-                        @endif
+                    <form id="searchForm" class="flex items-center gap-2">
+                        <input
+                            type="text"
+                            id="searchInput"
+                            placeholder="Procurar por nome"
+                            class="w-full sm:w-80 rounded border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-gray-900"
+                        >
+                        <a href="{{ route('participants.view-edit', $event->id) }}"
+                        id="clearSearch"
+                        class="rounded border px-3 py-2 text-sm hover:bg-gray-50">
+                            Limpar
+                        </a>
                     </form>
-                    <div class="text-sm text-gray-500 sm:ml-auto">
-                        {{ method_exists($participants,'total') ? $participants->total() : $participants->count() }} participante(s)
-                    </div>
                 </div>
+
 
                 {{-- ===================== Lista de participantes ===================== --}}
                 @if($participants->isEmpty())

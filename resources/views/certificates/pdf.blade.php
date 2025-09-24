@@ -64,7 +64,7 @@
     .logo { margin-bottom: 6mm; }
     .logo img { max-height: 14mm; }
 
-    /* Títulos e texto */
+    /* Títulos e texto  */
     .title { font-size: 20pt; letter-spacing: .5px; margin: 0 0 6mm 0; text-transform: uppercase; color: #111; }
     .subtitle { font-size: 11pt; color: #666; margin: 0 0 6mm 0; }
     .intro { font-size: 11pt; margin: 0 0 4mm 0; }

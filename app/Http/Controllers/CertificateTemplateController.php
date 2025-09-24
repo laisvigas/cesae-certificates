@@ -36,11 +36,18 @@ class CertificateTemplateController extends Controller
     {
         try {
             // Validação
+            // Obs:
+            // No validate(), o Laravel dispara exceções com mensagens padrão (mensagens de erro).
+            // Para personalizar as mensagems de erro, basta passar o segundo argumento para validate()
             $validated = $request->validate([
-                'name' => 'required|string|max:255',
+                'name' => 'required|string|max:255|unique:certificate_templates,name',
                 'event_id' => 'nullable|exists:events,id',
                 'logo' => 'nullable|file|mimes:jpeg,png,jpg,svg|max:2048',
                 'signature' => 'nullable|file|mimes:jpeg,png,jpg,svg|max:2048',
+            ], [
+                'name.unique' => 'Já existe um template com este nome. Escolha outro.',
+                'name.required' => 'O campo nome é obrigatório.',
+                'name.max' => 'O nome do template não pode ter mais de 255 caracteres.',
             ]);
 
             // ---------- Coleta todas as opções personalizadas do certificado:

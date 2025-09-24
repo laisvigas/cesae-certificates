@@ -29,3 +29,12 @@
   background: #fff;
   box-shadow: 0 4px 12px rgba(0,0,0,.15);
 }
+
+/* Media query para telas pequenas */
+@media (max-width: 640px) {
+  .floating-preview-container {
+    top: 100%;   /* Posiciona abaixo do item */
+    left: 0;     /* Alinha à esquerda do card */
+    padding-left: 0; /* Remove o padding lateral que empurrava para a direita */
+  }
+}

@@ -197,33 +197,39 @@ class CertificateController extends Controller
 
     public function publicDownloadByPublicId(string $publicId)
     {
-        $cert = Certificate::with(['event.type', 'participant', 'event.template'])
+        $cert = Certificate::with(['event.type', 'event.template', 'participant'])
             ->where('public_id', $publicId)
             ->whereNotNull('published_at')
             ->firstOrFail();
 
+        // pega as opções de customização do template ligado ao evento
         $template = $cert->event->template;
+        $templateOptions = $template?->options ?? [];
 
-        // decodificar opções do template se existirem
-        $templateOptions = $template ? json_decode($template->options, true) : [];
-
+        // gera os dados necessários para o blade
         $pdfData = $this->buildCertificateData(
             $cert->event,
             $cert->participant,
             null,
             $cert,
-            $templateOptions // aqui passa as opções decodificadas
+            $template
         );
 
+        // injeta as opções dentro do $pdfData, se não estiver lá
+        $pdfData['options'] = $templateOptions;
+
+        // gera o PDF "on the fly"
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('certificates.pdf', $pdfData)
             ->setPaper('A4', 'landscape')
             ->output();
 
+        // retorna direto sem salvar no disco
         return response()->streamDownload(
             fn() => print($pdf),
             "certificate-{$cert->participant->name}.pdf"
         );
     }
+
 
 
     // Generates PDF and send it to the email provided on the custom form

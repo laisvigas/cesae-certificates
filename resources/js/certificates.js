@@ -287,7 +287,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 // Se selecionou "Nenhum", define rota para "unassign"
                 form.action = unassignUrl;
-                form.method = "POST"; // poderia ser DELETE se tua rota aceitar
+                form.method = "POST";
             }
 
             form.submit();
@@ -296,7 +296,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
   /* =======================
-   * 7) Preview na view view-edit-participant.blade.php
+   * 7) Preview na view view-edit-participants.blade.php
    * ======================= */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -366,3 +366,79 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+/* =======================
+* 9) Search bar da blade view-edit-participnats.blade
+* ======================= */
+document.addEventListener('DOMContentLoaded', function () {
+    const searchForm = document.getElementById('searchForm');
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearSearch');
+    const countEl = document.getElementById('participantsCount');
+
+    // Seleciona todos os cards participantes (classe que já tens na blade)
+    const participants = Array.from(document.querySelectorAll('.participant-item'));
+
+    if (!searchInput || !participants.length) {
+        // nada a fazer se não houver campo ou participantes na página
+        return;
+    }
+
+    const normalize = (s) => (s || '').toString().toLowerCase();
+
+    function doFilter(e) {
+        if (e && e.preventDefault) e.preventDefault();
+
+        const q = normalize(searchInput.value).trim();
+        let visible = 0;
+
+        participants.forEach((p) => {
+            const text = normalize(p.textContent);
+            const match = q === '' || text.includes(q);
+            p.style.display = match ? '' : 'none';
+            if (match) visible++;
+        });
+
+        // Atualiza contador (usa data-total como fallback)
+        if (countEl) {
+            countEl.textContent = visible + ' participante(s)';
+        }
+    }
+
+    // Debounce para não rodar em excesso enquanto digita
+    function debounce(fn, wait = 120) {
+        let t;
+        return function (...args) {
+            clearTimeout(t);
+            t = setTimeout(() => fn.apply(this, args), wait);
+        };
+    }
+
+    // Filtra ao digitar (com debounce)
+    searchInput.addEventListener('input', debounce(function () {
+        doFilter();
+    }, 120));
+
+    // Clear: impede o reload e limpa o campo (mantém href como fallback se JS estiver off)
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function (ev) {
+            ev.preventDefault();
+            searchInput.value = '';
+            doFilter();
+
+            // remove q e page do URL (opcional, só para manter a URL limpa)
+            try {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('q');
+                url.searchParams.delete('page');
+                history.replaceState(null, '', url.toString());
+            } catch (err) { /* ignore */ }
+        });
+    }
+
+    // Se a página foi carregada com ?q=... rodar o filtro inicial
+    if (searchInput.value && searchInput.value.trim() !== '') {
+        doFilter();
+    }
+});
+
