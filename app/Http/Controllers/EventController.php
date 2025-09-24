@@ -72,7 +72,8 @@ class EventController extends Controller
     public function createEvent()
     {
         $types = EventType::orderBy('name')->get();
-        return view('events.create-event', compact('types'));
+        $event = new Event();
+        return view('events.create-event', compact('types', 'event'));
     }
 
     public function storeEvent(Request $request)
