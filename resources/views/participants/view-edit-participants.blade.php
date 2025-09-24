@@ -56,6 +56,46 @@
                                     <span><span class="font-medium">Instituição:</span> {{ $event->issuer_institution ?? config('app.name') ?? '—' }}</span>
                                     <span><span class="font-medium">Responsável:</span> {{ $event->issuer_name ?? '—' }}</span>
                                     <span><span class="font-medium">Cargo:</span> {{ $event->issuer_role ?? '—' }}</span>
+                                    <span class="font-medium">Template:</span>
+                                    <span>
+                                        {{-- Formulário para associar ou remover um template de um evento --}}
+                                        <form
+                                            id="event-template-form-{{ $event->id }}"
+                                            method="POST"
+                                            class="flex items-center gap-2"
+                                            data-event-id="{{ $event->id }}"
+                                            data-unassign-url="{{ route('templates.unassignFromEvent', $event->id) }}"
+                                            data-assign-base-url="{{ url('/templates') }}"
+                                        >
+                                            @csrf
+                                            {{-- Este input hidden garante que sabemos a qual evento o template será associado --}}
+                                            <input type="hidden" name="event_id" value="{{ $event->id }}">
+
+                                            <label for="template_id_{{ $event->id }}" class="sr-only">Selecionar template</label>
+
+                                            {{-- Dropdown de templates --}}
+                                            <select
+                                                name="template_id"
+                                                id="template_id_{{ $event->id }}"
+                                                class="rounded border border-gray-300 px-7 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-purple-600"
+                                                data-template-select
+                                            >
+                                            {{-- Opção para "remover" o template associado --}}
+                                                <option value="">Nenhum</option>
+
+                                            {{-- Lista todos os templates disponíveis --}}
+                                                @foreach($templates as $template)
+                                                    <option
+                                                        value="{{ $template->id }}"
+                                                        @selected($event->template_id == $template->id)
+                                                    >
+                                                        {{ $template->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </form>
+                                    </span>
+
                                 </div>
                             </div>
                             <span class="shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $badgeClass }}">
@@ -69,12 +109,25 @@
                         <!-- upload a csv file with participants data and attachs each one of them to this event in data base -->
                         <form action="/import-csv/{{ $event->id }}" method="POST" enctype="multipart/form-data">
                             @csrf
-                            <label class="cursor-pointer inline-flex items-center gap-2 rounded bg-purple-600 px-3 py-2 text-white text-sm hover:bg-purple-700">
+                            <label class="cursor-pointer inline-flex items-center gap-2 rounded bg-purple-600 px-3 py-2 text-white text-sm hover:bg-purple-700"
+                            title="Importar participantes de um ficheiro CSV"
+                            aria-label="Importar participantes de um ficheiro csv">
                                 <svg class="w-5 h-5" fill="currentColor" aria-hidden="true"><use href="#ms-upload_file"/></svg>
-                                <span>Carregar CSV</span>
+                                <span>Carregar</span>
                                 <input type="file" name="csv_file" accept=".csv" class="hidden" onchange="this.form.submit()">
                             </label>
                         </form>
+
+                            <!-- Botão para abrir o modal que importa participantes de um outro evento existente -->
+                            <button id="openImportModal"
+                                class="inline-flex items-center gap-2 rounded px-3 py-2 text-sm bg-green-600 text-white hover:bg-green-700"
+                                title="Importar participantes de outro evento"
+                                aria-label="Importar participantes de outro evento">
+                                <svg class="w-5 h-5" fill="currentColor" aria-hidden="true" viewBox="0 -960 960 960">
+                                    <path d="M440-120v-480H120v-160q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H440Zm80-80h240v-160H520v160Zm0-240h240v-160H520v160ZM200-680h560v-80H200v80ZM120-80v-80h102q-48-23-77.5-68T115-330q0-79 55.5-134.5T305-520v80q-45 0-77.5 32T195-330q0 39 24 69t61 38v-97h80v240H120Z"/>
+                                </svg>
+                                <span>Importar</span>
+                            </button>
 
                         <!-- Send certificates by email to each participant button -->
                         <form action="{{ route('certificates.sendAll', $event->id) }}" method="POST">
@@ -88,9 +141,10 @@
                                 title="Enviar certificado para todos os participantes"
                                 aria-label="Enviar certificado para todos os participantes">
                                 <svg class="w-5 h-5" fill="currentColor" aria-hidden="true"><use href="#ic-mail"/></svg>
-                                <span>Enviar todos</span>
+                                <span>Enviar</span>
                             </button>
                         </form>
+
                     </div>
                 </div>
 
@@ -202,20 +256,21 @@
 
                 {{-- ===================== Barra de busca simples ===================== --}}
                 <div class="mb-4 flex flex-col sm:flex-row sm:items-center gap-2">
-                    <form method="GET" class="flex items-center gap-2">
-                        {{-- mantém outros parâmetros (se houver) ao buscar --}}
-                        <input type="hidden" name="keep" value="1">
-                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Procurar por nome ou email"
-                               class="w-full sm:w-80 rounded border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-gray-900">
-                        <button class="rounded bg-gray-900 px-3 py-2 text-white text-sm hover:bg-gray-800">Buscar</button>
-                        @if(request('q'))
-                            <a href="{{ route('participants.view-edit', $event->id) }}" class="rounded border px-3 py-2 text-sm hover:bg-gray-50">Limpar</a>
-                        @endif
+                    <form id="searchForm" class="flex items-center gap-2">
+                        <input
+                            type="text"
+                            id="searchInput"
+                            placeholder="Procurar por nome"
+                            class="w-full sm:w-80 rounded border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-gray-900"
+                        >
+                        <a href="{{ route('participants.view-edit', $event->id) }}"
+                        id="clearSearch"
+                        class="rounded border px-3 py-2 text-sm hover:bg-gray-50">
+                            Limpar
+                        </a>
                     </form>
-                    <div class="text-sm text-gray-500 sm:ml-auto">
-                        {{ method_exists($participants,'total') ? $participants->total() : $participants->count() }} participante(s)
-                    </div>
                 </div>
+
 
                 {{-- ===================== Lista de participantes ===================== --}}
                 @if($participants->isEmpty())
@@ -226,7 +281,10 @@
                     <div class="space-y-3">
                         @foreach($participants as $participant)
                             {{-- ===== Card de participante com layout 3x2 + ações verticais ===== --}}
-                            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm participant-item"
+                            data-preview-url="{{ route('certificates.preview', ['participant' => $participant->id, 'event' => $event->id]) }}"
+                            data-participant-id="{{ $participant->id }}"
+                            data-event-id="{{ $event->id }}">
 
                                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
                                     {{-- Campos: em lg ocupam 3 colunas; 3 colunas x 2 linhas (6 campos) --}}
@@ -397,6 +455,10 @@
                                     </form>
                                 </div>
 
+                                    {{-- Floating Preview frame --}}
+                                    <div class="floating-preview-container">
+                                        <iframe class="floating-preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
+                                    </div>
                             </div>
                         @endforeach
                     </div>
@@ -414,6 +476,52 @@
                     <input type="hidden" name="event_id">
                 </form>
 
+
+                <!-- Modal -->
+                <div id="importModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center hidden">
+                    <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 relative">
+
+                        <!-- Botão fechar (X) -->
+                        <button id="closeImportModal"
+                            class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl font-bold">
+                            &times;
+                        </button>
+
+                        <h2 class="text-lg font-semibold mb-4">Importar Participantes</h2>
+
+                        <form id="importForm" method="POST" action="{{ route('participants.importFromEventSimple') }}" class="space-y-4">
+                            @csrf
+                            <input type="hidden" name="target_event_id" value="{{ $event->id }}">
+
+                            <div>
+                                <label for="source_event_id" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Escolha o Evento de Origem:
+                                </label>
+                                <select name="source_event_id" id="source_event_id" required
+                                    class="w-full rounded-lg border-gray-300 focus:ring focus:ring-blue-300">
+                                    <option value="" disabled selected>-- Selecione um evento --</option>
+                                    @foreach ($events->where('id', '!=', $event->id) as $otherEvent)
+                                        <option value="{{ $otherEvent->id }}">{{ $otherEvent->title }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="flex justify-end space-x-2 pt-2">
+                                <button type="submit"
+                                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                                    Importar
+                                </button>
+                                <button type="button" id="cancelBtn"
+                                    class="px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                    </div>
+                </div>
             </div>
         </div>
     </div>

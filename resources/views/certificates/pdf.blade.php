@@ -64,7 +64,7 @@
     .logo { margin-bottom: 6mm; }
     .logo img { max-height: 14mm; }
 
-    /* Títulos e texto */
+    /* Títulos e texto  */
     .title { font-size: 20pt; letter-spacing: .5px; margin: 0 0 6mm 0; text-transform: uppercase; color: #111; }
     .subtitle { font-size: 11pt; color: #666; margin: 0 0 6mm 0; }
     .intro { font-size: 11pt; margin: 0 0 4mm 0; }
@@ -98,7 +98,30 @@
       top: 2.2vw; left: 2.2vw; right: 2.2vw; bottom: 2.2vw;
     }
     .vcenter-cell { padding: 0 4vw; }
-    .logo img { max-height: 5vw; }
+    .logo {
+        margin-bottom: 6mm;
+        text-align: center; /* Adicionado para centralizar a imagem dentro da div */
+    }
+    .logo img {
+        max-height: 5vw;
+        margin: 0 auto; /* Centraliza a imagem se a div for um flexbox ou se for tratada como bloco */
+        display: block; /* Garante que a margin: auto funcione */
+    }
+
+    .watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+
+        /* MODIFICAÇÕES AQUI */
+        font-size: 10vw; /* Usa uma unidade relativa (viewport width) para o tamanho da fonte */
+        white-space: nowrap; /* Evita que o texto quebre */
+
+        color: var(--primary);
+        opacity: .06;
+        pointer-events: none;
+    }
     .title { font-size: 2.2vw; margin-bottom: 0.8vw; }
     .subtitle { font-size: 1vw; margin-bottom: 0.8vw; }
     .intro { font-size: 1vw; margin-bottom: 0.6vw; }

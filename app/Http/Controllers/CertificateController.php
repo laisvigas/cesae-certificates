@@ -57,7 +57,7 @@ class CertificateController extends Controller
         $certificate->save();
 
         // Busca o template do evento para usar suas opções
-        $template = $event->certificateTemplate;
+        $template = $event->template;
 
         // Monta dados e gera o PDF
         $pdfData = $this->buildCertificateData($event, $participant, null, $certificate, $template);
@@ -99,7 +99,7 @@ class CertificateController extends Controller
         $certificate->save();
 
         // Busca o template do evento para usar suas opções
-        $template = $event->certificateTemplate;
+        $template = $event->template;
 
         $pdfData = $this->buildCertificateData($event, $participant, null, $certificate, $template);
 
@@ -197,25 +197,39 @@ class CertificateController extends Controller
 
     public function publicDownloadByPublicId(string $publicId)
     {
-        $cert = Certificate::with(['event.type', 'participant'])
+        $cert = Certificate::with(['event.type', 'event.template', 'participant'])
             ->where('public_id', $publicId)
             ->whereNotNull('published_at')
             ->firstOrFail();
 
-        // Busca o template do evento para a geração do PDF
-        $template = $cert->event->certificateTemplate;
+        // pega as opções de customização do template ligado ao evento
+        $template = $cert->event->template;
+        $templateOptions = $template?->options ?? [];
 
-        $pdfData = $this->buildCertificateData($cert->event, $cert->participant, null, $cert, $template);
+        // gera os dados necessários para o blade
+        $pdfData = $this->buildCertificateData(
+            $cert->event,
+            $cert->participant,
+            null,
+            $cert,
+            $template
+        );
 
+        // injeta as opções dentro do $pdfData, se não estiver lá
+        $pdfData['options'] = $templateOptions;
+
+        // gera o PDF "on the fly"
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('certificates.pdf', $pdfData)
             ->setPaper('A4', 'landscape')
             ->output();
 
+        // retorna direto sem salvar no disco
         return response()->streamDownload(
             fn() => print($pdf),
             "certificate-{$cert->participant->name}.pdf"
         );
     }
+
 
 
     // Generates PDF and send it to the email provided on the custom form
@@ -262,7 +276,7 @@ class CertificateController extends Controller
         return back()->with('success', 'Certificado enviado com sucesso para ' . $request->input('email'));
     }
 
-    // Preview (HTML no iframe)
+    // Preview na custom.blade (HTML no iframe)
     public function previewCustom(Request $request)
     {
         $request->validate([
@@ -294,6 +308,40 @@ class CertificateController extends Controller
 
         return view('certificates.pdf', $pdfData);
     }
+
+    // Preview na view-edit-participnat.blade
+    public function preview(Request $request)
+    {
+        // 1. Validação dos dados de entrada
+        $request->validate([
+            'event_id'       => 'required|exists:events,id',
+            'participant_id' => 'required|exists:participants,id',
+        ]);
+
+        // 2. Busca o evento e o participante
+        $event       = Event::with('type')->findOrFail($request->input('event_id'));
+        $participant = Participant::findOrFail($request->input('participant_id'));
+
+        // 3. Busca o template associado ao evento. Se o evento não tiver um, a lógica pode usar um padrão.
+        // Assumimos que a relação 'certificateTemplate' está configurada no modelo Event.
+        $template = $event->template;
+
+        // 4. Cria ou encontra um registro de certificado para o preview
+        $certificate = Certificate::firstOrCreate(
+            ['event_id' => $event->id, 'participant_id' => $participant->id],
+            ['ref' => strtoupper(Str::random(12)), 'issued_at' => now()]
+        );
+
+        // 5. Constrói os dados para o PDF
+        // Reutiliza a sua função 'buildCertificateData' para centralizar a lógica de construção dos dados.
+        // Esta função deve ser responsável por juntar todas as informações do evento, participante e template.
+        $pdfData = $this->buildCertificateData($event, $participant, $request, $certificate, $template);
+        $pdfData['preview_mode'] = true;
+
+        // 6. Retorna a view do certificado para o preview
+        return view('certificates.pdf', $pdfData);
+    }
+
 
     // =========================
     // HELPERS
@@ -332,6 +380,9 @@ class CertificateController extends Controller
         }
 
         // Cor e watermark
+        // Expressões ternárias aninhadas são como uma sequência de blocos if/else. No caso de $primaryColor,
+        // primeiro verificamos se temos um $request e se ele contém um valor para 'primary_color'.
+        // Se não, então verificamos se temos um $template. Se não houver, $primaryColor será igual a '#000000'.  
         $primaryColor = $request && $request->filled('primary_color') ? (string)$request->input('primary_color') : ($template ? (string)$template->options['primary_color'] : '#000000');
         $watermark = $request && $request->filled('watermark') ? trim((string)$request->input('watermark')) : ($template ? (string)$template->options['watermark'] : null);
 

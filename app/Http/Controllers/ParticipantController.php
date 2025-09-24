@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\Participant;
 use Illuminate\Http\Request;
+use App\Models\CertificateTemplate;
 use Illuminate\Support\Facades\Validator;
 
 class ParticipantController extends Controller
@@ -19,8 +20,11 @@ class ParticipantController extends Controller
     public function showParticipantsInEvent(Event $event) // fetch participants for this one event
     {
         $participants = $event->participants;
+        $template = $event->template;
+        $templates = CertificateTemplate::all();
+        $events = Event::all(); // para poder importar participantes de outro evento
 
-        return view('participants.view-edit-participants', compact('event', 'participants'));
+        return view('participants.view-edit-participants', compact('event', 'participants', 'template', 'templates', 'events'));
     }
 
     public function createParticipant() // not used (used storeAndAttach instead)
@@ -200,5 +204,27 @@ class ParticipantController extends Controller
         fclose($handle);
 
         return back()->with('success', "$imported participantes importados com sucesso.");
+    }
+
+    public function importFromEventSimple(Request $request)
+    {
+        // IDs vindos do formulário
+        $targetEventId = $request->input('target_event_id'); // evento que vai receber os participantes
+        $sourceEventId = $request->input('source_event_id'); // evento de onde os participantes vêm
+
+        $targetEvent = Event::find($targetEventId);
+        $sourceEvent = Event::with('participants')->find($sourceEventId);
+
+        if (!$targetEvent || !$sourceEvent) {
+            return "Evento de origem ou destino não encontrado.";
+        }
+
+        // Pega os IDs dos participantes do evento de origem
+        $participantIds = $sourceEvent->participants->pluck('id')->toArray();
+
+        // Adiciona ao evento destino sem remover os existentes
+        $targetEvent->participants()->syncWithoutDetaching($participantIds);
+
+        return back()->with('success', "Importação concluída: " . count($participantIds) . " participantes adicionados ao evento '{$targetEvent->title}'.");
     }
 }
