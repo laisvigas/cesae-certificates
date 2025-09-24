@@ -23,7 +23,7 @@
                         <x-nav-link :href="route('certificates.custom')" :active="request()->routeIs('certificates.*')">
                             {{ __('Gerar Certificado') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('participants.index')" :active="request()->routeIs('certificates.*')">
+                        <x-nav-link :href="route('participants.index')" :active="request()->routeIs('participants.*')">
                             {{ __('Participantes') }}
                         </x-nav-link>
                     @endif

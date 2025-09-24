@@ -201,8 +201,16 @@
                                     class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700">
                                 Salvar como Template
                             </button>
+
+                            <!-- Botão apagar -->
+                            <button type="button" id="btnDeleteTemplate"
+                                    class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded bg-red-600 text-white text-sm hover:bg-red-700">
+                                Apagar Template
+                            </button>
+
                         </div>
                     </div>
+
 
                     <!-- Botões -->
                     <!-- Obs: -> method on <form> sets the default HTTP method for the whole form.
