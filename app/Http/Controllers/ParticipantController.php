@@ -23,8 +23,6 @@ class ParticipantController extends Controller
         return view('participants.index', compact('participants', 'totalParticipants'));
     }
 
-
-
     public function showParticipantsInEvent(Event $event) // fetch participants for this one event
     {
         $participants = $event->participants;
@@ -77,45 +75,66 @@ class ParticipantController extends Controller
     }
 
     public function storeAndAttach(Request $request, $eventId)
-    // Search for a participant and attach it to an event.
-    // If the participant doesn't exist, create it. If it exists, update optional fields.
     {
-        $validated = $request->validate([
-            'name'            => 'required|string|max:255',
-            'email'           => 'required|email|max:255',
-            'phone'           => 'nullable|string|max:50',
-            'address'         => 'nullable|string|max:255',
-            'document_type'   => 'nullable|string|max:100',
-            'document_number' => 'nullable|string|max:100',
-            'nationality'     => 'nullable|string|max:150',
+        // valida primeiro o email
+        $base = $request->validate([
+            'email' => 'required|email|max:255',
+            'update_existing' => 'nullable|boolean',
         ]);
+        $email = strtolower(trim($base['email']));
+        $updateExisting = (bool)($base['update_existing'] ?? false);
 
         $event = Event::findOrFail($eventId);
 
-        // Check if participant exists. If not, create it
-        $participant = Participant::firstOrCreate(
-            ['email' => $validated['email']],
-            [
-                'name'            => $validated['name'],
-                'phone'           => $validated['phone'] ?? null,
-                'address'         => $validated['address'] ?? null,
-                'document_type'   => $validated['document_type'] ?? null,
-                'document_number' => $validated['document_number'] ?? null,
-                'nationality'     => $validated['nationality'] ?? null,
-            ]
-        );
+        // Procura participante
+        $participant = Participant::where('email', $email)->first();
 
-        // If participant already existed, update optional fields (inclui nationality)
-        $participant->fill($validated);
-        $participant->save();
+        if (!$participant) {
+            // Se não existe, agora sim exigimos os outros campos
+            $extra = $request->validate([
+                'name'            => 'required|string|max:255',
+                'phone'           => 'nullable|string|max:50',
+                'address'         => 'nullable|string|max:255',
+                'document_type'   => 'nullable|string|max:100',
+                'document_number' => 'nullable|string|max:100',
+                'nationality'     => 'nullable|string|max:150',
+            ]);
 
-        // Attach participant to event if not already attached
-        if (!$event->participants->contains($participant->id)) {
+            $participant = Participant::create([
+                'email'           => $email,
+                'name'            => $extra['name'],
+                'phone'           => $extra['phone'] ?? null,
+                'address'         => $extra['address'] ?? null,
+                'document_type'   => $extra['document_type'] ?? null,
+                'document_number' => $extra['document_number'] ?? null,
+                'nationality'     => $extra['nationality'] ?? null,
+            ]);
+
+        } else {
+            // Já existe → opcionalmente atualizar
+            if ($updateExisting) {
+                $upd = $request->validate([
+                    'name'            => 'required|string|max:255',
+                    'phone'           => 'nullable|string|max:50',
+                    'address'         => 'nullable|string|max:255',
+                    'document_type'   => 'nullable|string|max:100',
+                    'document_number' => 'nullable|string|max:100',
+                    'nationality'     => 'nullable|string|max:150',
+                ]);
+
+                $participant->fill($upd)->save();
+            }
+            // Se não marcou update_existing, não altera nada
+        }
+
+        // Anexa ao evento se ainda não estiver
+        if (!$event->participants()->where('participants.id', $participant->id)->exists()) {
             $event->participants()->attach($participant->id);
         }
 
         return back()->with('success', 'Participante adicionado.');
     }
+
 
     public function detachParticipant(Event $event, Participant $participant)
     {
@@ -234,5 +253,26 @@ class ParticipantController extends Controller
         $targetEvent->participants()->syncWithoutDetaching($participantIds);
 
         return back()->with('success', "Importação concluída: " . count($participantIds) . " participantes adicionados ao evento '{$targetEvent->title}'.");
+    }
+
+    public function lookupByEmail(Request $request)
+    {
+        $data = $request->validate([
+            'email' => 'required|email'
+        ]);
+
+        $email = strtolower(trim($data['email']));
+        $participant = Participant::where('email', $email)->first();
+
+        if ($participant) {
+            return response()->json([
+                'found' => true,
+                'participant' => $participant->only([
+                    'id','name','email','phone','address','document_type','document_number','nationality'
+                ])
+            ]);
+        }
+
+        return response()->json(['found' => false]);
     }
 }

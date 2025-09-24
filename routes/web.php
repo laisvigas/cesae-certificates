@@ -68,6 +68,10 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
 
     });
 
+    Route::get('/participants/lookup', [ParticipantController::class, 'lookupByEmail'])
+    ->name('participants.lookup');
+
+
     // Rotas de certificados
 
     // Custom certificate form routes

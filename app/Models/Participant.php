@@ -30,4 +30,9 @@ class Participant extends Model
     {
         return $this->hasMany(Certificate::class);
     }
+
+    public function setEmailAttribute($value)
+    {
+        $this->attributes['email'] = strtolower(trim($value));
+    }
 }
