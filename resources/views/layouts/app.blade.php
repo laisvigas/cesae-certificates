@@ -14,7 +14,7 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased overflow-x-hidden pb-6 m-3">
+    <body class="font-sans antialiased overflow-x-hidden pb-6 mb-3">
         {{-- SVG sprite (all icons live here, hidden but reusable) --}}
         @include('icons.sprite')
 
