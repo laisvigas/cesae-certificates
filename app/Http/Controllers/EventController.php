@@ -34,7 +34,9 @@ class EventController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('events.index', compact('events','types','selected','selectedStatus'));
+        $totalAllEvents = Event::count();
+
+        return view('events.index', compact('events','types','selected','selectedStatus', 'totalAllEvents'));
     }
 
 

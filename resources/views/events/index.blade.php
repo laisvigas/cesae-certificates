@@ -30,6 +30,10 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white shadow rounded-none sm:rounded-lg p-4 sm:p-6">
 
+              <p class="font-semibold text-sm text-gray-800 leading-tight truncate">Nº total de Eventos: {{ $totalAllEvents }}</p>
+              {{-- separador --}}
+              <div class="my-6 border-t border-gray-200"></div>
+
                 @if(session('success'))
                     <div class="mb-4 p-3 rounded border border-green-200 bg-green-50 text-green-700 text-sm flex items-start gap-2">
                         <svg class="w-5 h-5 mt-0.5" fill="currentColor" aria-hidden="true">
