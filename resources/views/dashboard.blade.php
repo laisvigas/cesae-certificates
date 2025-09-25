@@ -27,12 +27,17 @@
         <div class="p-6 sm:p-8 lg:p-10">
           <div class="flex flex-col lg:flex-row lg:justify-between gap-6">
 
-            <div>
-              <h3 class="text-xl sm:text-2xl font-bold text-gray-900">Olá! 👋</h3>
-              <p class="text-gray-600 mt-1 max-w-2xl">
-                -- quero adicionar frases motivacionais aqui --
-              </p>
+            {{-- Saudação + dicas centralizadas vertical e horizontalmente --}}
+            <div class="flex flex-col items-center justify-center text-center">
+            <h3 class="text-xl sm:text-2xl font-bold text-gray-900">Olá! 👋</h3>
+
+            <div x-data="tipsWidget" class="mt-2">
+                <p class="text-gray-700 max-w-2xl flex items-center justify-start gap-2">
+                <span class="leading-relaxed" x-text="tip.text"></span>
+                </p>
             </div>
+            </div>
+
 
             {{-- LEMBRETES (compacto, máx. 5) --}}
             <div class="w-full lg:w-[520px]">
@@ -47,7 +52,7 @@
                   <li class="inline-flex items-center gap-2 rounded-full ring-1 ring-gray-200 bg-white px-3 py-1.5 text-xs shadow-sm">
                     <span class="h-2.5 w-2.5 rounded-full {{ $dot[$reminder->priority] ?? 'bg-emerald-500' }}"></span>
                     <span class="max-w-[290px] truncate" title="{{ $reminder->mensagem }}">
-                    {{ Str::limit($reminder->mensagem, 40) }}
+                      {{ Str::limit($reminder->mensagem, 40) }}
                     </span>
                     <form method="POST" action="{{ route('notes.destroy', $reminder) }}" onsubmit="return confirm('Apagar este lembrete?')">
                       @csrf @method('DELETE')
@@ -74,11 +79,10 @@
                 </div>
 
                 <input name="mensagem"
-                    placeholder="{{ ($limitReached ?? false) ? 'Já há muitos lembretes!' : 'Novo lembrete...' }}"
-                    {{ ($limitReached ?? false) ? 'disabled' : '' }}
-                    required maxlength="40"
-                    class="rounded-lg border-gray-300 text-sm px-3 py-2 w-56 {{ ($limitReached ?? false) ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : '' }}">
-
+                       placeholder="{{ ($limitReached ?? false) ? 'Já há muitos lembretes!' : 'Novo lembrete...' }}"
+                       {{ ($limitReached ?? false) ? 'disabled' : '' }}
+                       required maxlength="40"
+                       class="rounded-lg border-gray-300 text-sm px-3 py-2 w-56 {{ ($limitReached ?? false) ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : '' }}">
 
                 <button class="rounded-lg bg-gray-900 text-white text-xs px-3 py-2 hover:bg-black/90 {{ ($limitReached ?? false) ? 'opacity-50 cursor-not-allowed' : '' }}"
                         {{ ($limitReached ?? false) ? 'disabled aria-disabled=true' : '' }}>

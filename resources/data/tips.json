@@ -1,0 +1,79 @@
+[
+  { "text": "Beba água! 💧", "type": "health" },
+  { "text": "Faça uma pausa de 2 min a cada 30 min. 🧘", "type": "focus" },
+  { "text": "Revise seu objetivo do dia agora. 🎯", "type": "productivity" },
+  { "text": "Respire fundo 3 vezes. 😮‍💨", "type": "health" },
+  { "text": "Feito > perfeito. Envie aquele rascunho. 🚀", "type": "mindset" },
+
+  { "text": "Alongue os ombros enquanto lê isso. 🧎", "type": "health" },
+  { "text": "A técnica Pomodoro ajuda no foco: 25min foco, 5min pausa. ⏱️", "type": "focus" },
+  { "text": "Priorize a tarefa mais importante do dia primeiro. ✅", "type": "productivity" },
+  { "text": "Lembre-se: descansar também é produtividade. 🌙", "type": "mindset" },
+  { "text": "Sorria — muda sua química cerebral em segundos. 🙂", "type": "mindset" },
+
+  { "text": "A cada hora sentado, levante por 2 minutos. 🚶", "type": "health" },
+  { "text": "Desative notificações por 1h e veja a diferença. 📵", "type": "focus" },
+  { "text": "Divida tarefas grandes em pequenas etapas. 🪜", "type": "productivity" },
+  { "text": "Você é capaz de mais do que imagina. 🌟", "type": "mindset" },
+  { "text": "Durma 7–9h por noite para consolidar memórias. 🛌", "type": "health" },
+
+  { "text": "Olhe para longe da tela por 20s a cada 20min. 👀", "type": "health" },
+  { "text": "Organize sua mesa: menos bagunça = mais foco. 🗂️", "type": "focus" },
+  { "text": "Anote 3 coisas que já fez hoje. Progresso conta! ✍️", "type": "productivity" },
+  { "text": "Fracassos são ensaios para o sucesso. 🌱", "type": "mindset" },
+  { "text": "Se mova: caminhar aumenta a criatividade. 🚶‍♀️", "type": "health" },
+
+  { "text": "Beba chá ou água morna para acalmar a mente. 🍵", "type": "health" },
+  { "text": "Experimente trabalhar em blocos sem celular por perto. 📴", "type": "focus" },
+  { "text": "Revise suas prioridades semanalmente. 📅", "type": "productivity" },
+  { "text": "Cada passo, por menor que seja, ainda é avanço. ➡️", "type": "mindset" },
+  { "text": "Escreva uma gratidão do dia. 🙏", "type": "mindset" },
+
+  { "text": "Postura ereta aumenta energia e autoconfiança. 🧍", "type": "health" },
+  { "text": "Elimine uma distração agora mesmo. 🚫", "type": "focus" },
+  { "text": "Delegue o que não precisa ser feito por você. 🤝", "type": "productivity" },
+  { "text": "Recomeçar é melhor do que desistir. 🔄", "type": "mindset" },
+  { "text": "Curiosidade: o cérebro consome 20% da energia do corpo. 🧠", "type": "focus" },
+
+  { "text": "Hidrate a pele, não só o corpo. 🧴", "type": "health" },
+  { "text": "Trabalhar em silêncio profundo aumenta a retenção. 🤫", "type": "focus" },
+  { "text": "Estabeleça prazos realistas para não se frustrar. 🕒", "type": "productivity" },
+  { "text": "Você não precisa ser perfeito para ser incrível. ✨", "type": "mindset" },
+  { "text": "Tire 5 respirações profundas antes de continuar. 🌬️", "type": "health" },
+
+  { "text": "Mantenha sempre uma garrafinha de água por perto. 🚰", "type": "health" },
+  { "text": "Desligue abas que não está usando agora. 💻", "type": "focus" },
+  { "text": "Comece pelo que evita há dias: é libertador. 🗝️", "type": "productivity" },
+  { "text": "A jornada importa tanto quanto o destino. 🛤️", "type": "mindset" },
+  { "text": "Faça alongamento rápido do pescoço agora. 🧘‍♂️", "type": "health" },
+
+  { "text": "Se movimente pelo menos 10 min no intervalo. 🕺", "type": "health" },
+  { "text": "Use música instrumental para manter a concentração. 🎶", "type": "focus" },
+  { "text": "Revise se sua meta de hoje ainda faz sentido. 🎯", "type": "productivity" },
+  { "text": "Comparar-se só com você mesmo de ontem. 📈", "type": "mindset" },
+  { "text": "Leia 1 página de algo inspirador. 📖", "type": "mindset" },
+
+  { "text": "Levante e estique braços agora mesmo. 🙆", "type": "health" },
+  { "text": "Curiosidade: escrever à mão aumenta memorização. ✍️", "type": "focus" },
+  { "text": "Elimine 1 tarefa que não agrega hoje. 🗑️", "type": "productivity" },
+  { "text": "Respirar devagar reduz ansiedade em 90s. ⏳", "type": "health" },
+  { "text": "Seu esforço silencioso será recompensado. 🌌", "type": "mindset" },
+
+  { "text": "Curiosidade: o coração humano bate em média 100 mil vezes por dia. ❤️", "type": "curiosity" },
+  { "text": "Sabia que as abelhas reconhecem rostos humanos? 🐝", "type": "curiosity" },
+  { "text": "O cérebro consome cerca de 20% da energia do corpo. 🧠", "type": "curiosity" },
+  { "text": "A cada copo de vinho, Portugal exporta 3! 🍷", "type": "portugal" },
+  { "text": "O azulejo é uma das marcas registradas da arte portuguesa. 🟦", "type": "portugal" },
+
+  { "text": "Portugal tem a livraria mais antiga do mundo ainda em funcionamento: Bertrand, Lisboa. 📚", "type": "portugal" },
+  { "text": "A Ponte Vasco da Gama em Lisboa tem 17 km de extensão. 🌉", "type": "portugal" },
+  { "text": "A água pode existir em três estados (sólido, líquido, gasoso) ao mesmo tempo no chamado ponto triplo. 💧❄️☁️", "type": "curiosity" },
+  { "text": "Os polvos têm três corações e sangue azul. 🐙", "type": "curiosity" },
+  { "text": "As ondas da Nazaré, em Portugal, são algumas das maiores do mundo. 🌊", "type": "portugal" },
+
+  { "text": "O DNA humano tem cerca de 3 bilhões de pares de bases. 🧬", "type": "curiosity" },
+  { "text": "O sol representa 99,86% da massa do Sistema Solar. ☀️", "type": "curiosity" },
+  { "text": "Portugal foi o primeiro país europeu a abolir a pena de morte. ⚖️", "type": "portugal" },
+  { "text": "A madeira da árvore sobreiro, típica de Portugal, dá origem às rolhas de vinho. 🌳", "type": "portugal" },
+  { "text": "Respirar profundamente acalma o sistema nervoso em segundos. 🌬️", "type": "health" }
+]

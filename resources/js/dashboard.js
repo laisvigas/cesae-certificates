@@ -10,8 +10,8 @@ function renderLine(ctx, labels, data){
         data,
         tension: 0.35,
         fill: true,
-        backgroundColor: 'rgba(99, 102, 241, 0.12)', // indigo-500/12
-        borderColor: 'rgba(79, 70, 229, 1)',          // indigo-600
+        backgroundColor: 'rgba(99, 102, 241, 0.12)',
+        borderColor: 'rgba(79, 70, 229, 1)',
         borderWidth: 2,
         pointRadius: 2,
         pointHoverRadius: 4
@@ -34,9 +34,9 @@ function renderDonut(ctx, values){
       datasets: [{
         data: values,
         backgroundColor: [
-          'rgba(99, 102, 241, 0.85)',  // indigo
-          'rgba(16, 185, 129, 0.85)',  // emerald
-          'rgba(251, 191, 36, 0.85)'   // amber
+          'rgba(99, 102, 241, 0.85)',
+          'rgba(16, 185, 129, 0.85)',
+          'rgba(251, 191, 36, 0.85)'
         ],
         borderWidth: 0
       }]
