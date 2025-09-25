@@ -20,11 +20,14 @@
                         <x-nav-link :href="route('events.index')" :active="request()->routeIs('events.*')">
                             {{ __('Eventos') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('certificates.custom')" :active="request()->routeIs('certificates.*')">
+                        <x-nav-link :href="route('certificates.custom')" :active="request()->routeIs('certificates.custom')">
                             {{ __('Gerar Certificado') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('participants.index')" :active="request()->routeIs('participants.*')">
+                        <x-nav-link :href="route('participants.index')" :active="request()->routeIs('participants.index')">
                             {{ __('Participantes') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('certificates.validate')" :active="request()->routeIs('certificates.validate')">
+                            {{ __('Validação') }}
                         </x-nav-link>
                     @endif
                 </div>

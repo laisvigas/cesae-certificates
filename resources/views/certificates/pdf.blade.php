@@ -18,8 +18,12 @@
     <meta property="og:title" content="Certificado – {{ $name ?? 'Participante' }}">
     <meta property="og:description" content="{{ $event_title ?? 'Evento' }} • Código: {{ $ref ?? '—' }}">
     <meta property="og:url" content="{{ url()->current() }}">
-    {{-- <meta property="og:image" content="{{ asset('img/certificate-og-default.jpg') }}"> --}}
     <meta name="robots" content="noindex, nofollow">
+    {{-- OG image meta properties for social media sharing (prototype) --}}
+    <meta property="og:image" content="https://i.postimg.cc/4yQM0wRS/79.png" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="900" />
   @endif
 
   <style>
@@ -40,9 +44,21 @@
       --title-letterspace: 1.5px;
     }
 
+    /* ===== NOVO: Estilo base do certificado ===== */
+    .certificate-container {
+    width: 1123px;         /* A4 horizontal */
+    aspect-ratio: 297 / 210;
+    margin: 0 auto;
+    background: white;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    border-radius: .6vw;
+    overflow: hidden;
+    position: relative;
+    }
+
     /* ===== Moldura dupla ===== */
     .frame {
-      position: fixed;
+      position: absolute;  /* Mudei de fixed pra absolute (pq agora está dentro do container) */
       top: 10mm; left: 10mm; right: 10mm; bottom: 10mm;
       border: var(--frame-thick) solid var(--primary);
       border-radius: var(--frame-radius);
@@ -63,7 +79,7 @@
 
     /* ===== Área útil ===== */
     .content-area {
-      position: fixed;
+      position: absolute;  /* Mudei de fixed -> absolute (pq agora está dentro do container) */
       top: calc(25mm + 2mm);
       left: 14mm; right: 14mm; bottom: 15mm;
       box-sizing: border-box;
@@ -83,15 +99,15 @@
     }
 
     /* ====== LOGO ====== */
-    .logo { 
-      margin-bottom: 7mm; 
-      text-align: center;        
+    .logo {
+      margin-bottom: 7mm;
+      text-align: center;
     }
     .logo img{
       max-height: 20mm;
-      display: block;               
-      margin-left: auto; 
-      margin-right: auto;      
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     /* ===== Tipografia ===== */
@@ -145,7 +161,7 @@
     .validation-code {
       position: fixed;
       left: 14mm; right: 14mm;
-      bottom: 12mm;            
+      bottom: 12mm;
       text-align: center;
       font-size: 5pt;
       color: #444;
@@ -153,23 +169,39 @@
 
     /* ===== Preview (web) ===== */
     @if(($preview_mode ?? false) || request()->query('preview'))
-      .frame {
-        top: 2vw; left: 2vw; right: 2vw; bottom: 2vw;
-        border-width: .25vw; border-radius: .6vw;
-        overflow: hidden;
-      }
-      .frame::after {
-        /* evitar inset: por consistência */
-        top: 1.2vw; left: 1.2vw; right: 1.2vw; bottom: 1.2vw;
-        border-width: .1vw; border-radius: .45vw;
-        box-sizing: border-box;
-      }
+       .certificate-preview {
+    width: 92vw;                /* ocupa quase toda a largura */
+    max-width: 1200px;          /* limite de tamanho */
+    aspect-ratio: 297 / 210;    /* formato A4 paisagem */
+    margin: 2vw auto;
+    position: relative;
+    background: white;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    border-radius: .6vw;
+    overflow: hidden;
+  }
+
+  .frame,
+  .content-area {
+    position: absolute;
+    inset: 0;
+  }
+
+  .frame {
+    border-width: .25vw;
+    border-radius: .6vw;
+  }
+  .frame::after {
+    top: 1.2vw; left: 1.2vw; right: 1.2vw; bottom: 1.2vw;
+    border-width: .1vw;
+    border-radius: .45vw;
+  }
       .content-area { top: calc(2.2vw + .8vw); left: 3vw; right: 3vw; bottom: 3vw; }
       .vcenter-cell { padding: 0 4vw; }
 
-      .logo { margin-bottom: 2.2vw; text-align:center; }
+      .logo { margin-bottom: 1vw; margin-top: 1vw; text-align:center; } /* Mudei margin-bottom para 1vw e acrescentei margin-top */
       .logo img{
-        max-height: 6vw;
+        max-height: 5vw; /* mudei de 6 para 5 */
         display: block;
         margin-left: auto;
         margin-right: auto;
@@ -177,13 +209,13 @@
 
       .watermark { font-size: 10vw; }
 
-      .title { font-size: 3vw; margin-bottom: 1vw; }
-      .subtitle { font-size: 1vw; margin-bottom: 1.2vw; letter-spacing: .09vw; }
+      .title { font-size: 2.5vw; margin-bottom: 1vw; } /* mudei de 3 pra 2.5 */
+      .subtitle { font-size: 0.8vw; margin-bottom: 1.2vw; letter-spacing: .09vw; } /* mudei de 1 pra 0.8 */
       .intro { font-size: 1.05vw; margin-bottom: .8vw; }
-      .name  { font-size: 3.6vw; margin-bottom: 1.2vw; }
+      .name  { font-size: 3vw; margin-bottom: 1.2vw; } /* Mudei de 3,6 para 3 */
 
       .course-line { font-size: 1.25vw; }
-      .main-line   { font-weight: 700; }
+      .main-line   { font-weight: 600; } /* mudei de 700 pra 600 */
       .extra-line  { font-size: 1.05vw; color: #444; }
 
       .date-line { font-size: 1vw; margin-top: .5vw; }
@@ -191,7 +223,7 @@
 
       .footer-table   { margin-top: 1.6vw; font-size: .9vw; }
       .footer-table td{ padding-top: 1.6vw; }
-      .sig-img        { max-height: 4.2vw; margin-bottom: .6vw; }
+      .sig-img        { max-height: 4vw; margin-bottom: .6vw; } /* Mudei de 4.2 para 4 */
       .sig-line       { border-top-width: .06vw; margin-bottom: .6vw; }
 
       /* Código de validação no preview */
@@ -216,41 +248,57 @@
   @if($showActionBar)
     @php
       $shareUrl  = urlencode(url()->current());
-      $shareText = urlencode("Meu certificado: " . ($event_title ?? ''));
+      $shareUrl_demo  = 'https://i.postimg.cc/4yQM0wRS/79.png';
+      $shareText = "Certificado conquistado!%0AConcluí com sucesso o {$event_title}, promovido pelo "
+        . ($institution_name ?? 'Cesae Digital')
+        . ".%0AOrgulho de mais uma etapa concluída na minha jornada profissional!";
+
     @endphp
 
-    <div class="max-w-5xl mx-auto mt-6 mb-4 px-4 font-sans">
-      <div class="flex flex-wrap gap-2">
-        <a href="{{ route('certificates.public.download', $resolvedPublicId) }}"
-           class="inline-flex items-center px-3 py-2 text-sm border rounded-md no-underline hover:bg-gray-50">
-          Baixar PDF
-        </a>
+    <div class="fixed top-6 left-6 bg-white shadow-lg rounded-xl p-3 z-50">
+        <div class="flex flex-wrap gap-2">
 
-        <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ $shareUrl }}" target="_blank" rel="noopener"
-           class="inline-flex items-center px-3 py-2 text-sm border rounded-md no-underline hover:bg-gray-50">
-          Compartilhar no LinkedIn
-        </a>
+            {{-- Download PDF --}}
+            <a href="{{ route('certificates.public.download', $resolvedPublicId) }}"
+            class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 transition">
+            Baixar PDF
+            </a>
 
-        <a href="https://www.facebook.com/sharer/sharer.php?u={{ $shareUrl }}" target="_blank" rel="noopener"
-           class="inline-flex items-center px-3 py-2 text-sm border rounded-md no-underline hover:bg-gray-50">
-          Facebook
-        </a>
+            {{-- LinkedIn --}}
+            <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ $shareUrl_demo }}&text={{ $shareText }}"
+            target="_blank" rel="noopener"
+            class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-white bg-[#0077b5] hover:bg-[#005582] transition">
+            LinkedIn
+            </a>
 
-        <a href="https://twitter.com/intent/tweet?url={{ $shareUrl }}&text={{ $shareText }}" target="_blank" rel="noopener"
-           class="inline-flex items-center px-3 py-2 text-sm border rounded-md no-underline hover:bg-gray-50">
-          X/Twitter
-        </a>
+            {{-- Facebook --}}
+            <a href="https://www.facebook.com/sharer/sharer.php?u={{ $shareUrl }}"
+            target="_blank" rel="noopener"
+            class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-white bg-[#1877f2] hover:bg-[#145dbf] transition">
+            Facebook
+            </a>
 
-        <a href="https://wa.me/?text={{ $shareText }}%20{{ $shareUrl }}" target="_blank" rel="noopener"
-           class="inline-flex items-center px-3 py-2 text-sm border rounded-md no-underline hover:bg-gray-50">
-          WhatsApp
-        </a>
-      </div>
+            {{-- Twitter/X --}}
+            <a href="https://twitter.com/intent/tweet?url={{ $shareUrl }}&text={{ $shareText }}"
+            target="_blank" rel="noopener"
+            class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-white bg-[#1da1f2] hover:bg-[#0d95e8] transition">
+            X/Twitter
+            </a>
 
-      <hr class="mt-4 border-t border-gray-200">
-    </div>
+            {{-- WhatsApp --}}
+            <a href="https://wa.me/?text={{ $shareText }}%20{{ $shareUrl }}"
+            target="_blank" rel="noopener"
+            class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-white bg-[#25d366] hover:bg-[#1da851] transition">
+            WhatsApp
+            </a>
+
+        </div>
+</div>
+
   @endif
 
+  {{-- NOVO: Container principal do certificado --}}
+  <div class="certificate-container">
   <!-- Moldura -->
   <div class="frame"></div>
 
@@ -333,6 +381,7 @@
       </div>
     </div>
   </div>
+</div>
 
   {{-- Código de validação fixo no rodapé (dentro do body) --}}
   @if(!empty($ref))

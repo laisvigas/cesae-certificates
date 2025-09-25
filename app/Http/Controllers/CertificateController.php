@@ -29,6 +29,14 @@ class CertificateController extends Controller
         return view('certificates.custom', compact('events', 'templates'));
     }
 
+    // Show validate blade
+    public function validate()
+    {
+        $certificates = Certificate::all();
+
+        return view('certificates.validate', compact('certificates'));
+    }
+
     // =========================
     // PARTICIPANTS (outras telas)
     // =========================
@@ -482,4 +490,45 @@ class CertificateController extends Controller
     // executable files, in a text-only format. It's essentially a method for translating binary data
     // (which uses 0s and 1s) into a sequence of printable characters from the ASCII character set.
     // The name "Base64" comes from the fact that it uses a 64-character alphabet to represent the data.
+
+
+    public function searchByCode(Request $request)
+    {
+        $code = $request->query('code');
+
+        if (!$code) {
+            return response()->json(['error' => 'Código não informado.'], 400);
+        }
+
+        $certificate = Certificate::where('ref', $code)->first();
+
+        if (!$certificate) {
+            return response()->json(['error' => 'Certificado não encontrado.'], 404);
+        }
+
+        $event = $certificate->event;
+        $participant = $certificate->participant;
+
+        // Cria um request fake com os campos esperados pelo previewCustom
+        $fakeRequest = new Request([
+            'event_id'           => $event->id,
+            'participant_id'     => $participant->id,
+            'primary_color'      => '#6d28d9', // cor padrão
+            'watermark'          => null,
+            'course_line_prefix' => null,
+            'logo'               => null,
+            'signature'          => null,
+            'template_id'        => $event->template?->id,
+        ]);
+
+        // Chama previewCustom internamente
+        $view = $this->previewCustom($fakeRequest);
+
+        $html = $view->render();
+
+        return response()->json(['html' => $html]);
+    }
+
+
+
 }

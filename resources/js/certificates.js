@@ -483,3 +483,49 @@ document.getElementById('btnDeleteTemplate')?.addEventListener('click', async fu
         alert('Erro ao apagar template.');
     }
 });
+
+
+/* =======================
+* 11) Validar/encontrar certificado pelo codigo na validate.blade
+* ======================= */
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('btnSearchCertificate').addEventListener('click', function() {
+        const code = document.getElementById('certificateCode').value.trim();
+        const successDiv = document.getElementById('successMessage');
+        const errorDiv = document.getElementById('searchError');
+        const previewContainer = document.getElementById('certificatePreviewContainer');
+        const iframe = document.getElementById('certificatePreviewFrame');
+
+        errorDiv.classList.add('hidden');
+        previewContainer.style.display = 'none';
+
+        if (!code) {
+            errorDiv.textContent = 'Por favor, insira um código.';
+            errorDiv.classList.remove('hidden');
+            return;
+        }
+
+        fetch(`/certificates/search?code=${code}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    errorDiv.textContent = data.error;
+                    errorDiv.classList.remove('hidden');
+                    return;
+                }
+
+                // Exibe preview caso o certificadomseja encontrado
+                iframe.srcdoc = data.html;
+                previewContainer.style.display = 'block';
+
+                // Exibe mensagem de sucesso
+                successDiv.classList.remove('hidden');
+
+            })
+            .catch(err => {
+                errorDiv.textContent = 'Ocorreu um erro ao buscar o certificado.';
+                errorDiv.classList.remove('hidden');
+                console.error(err);
+            });
+    });
+});
