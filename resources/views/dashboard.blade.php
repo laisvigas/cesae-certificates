@@ -12,9 +12,6 @@
           <svg class="w-4 h-4" fill="currentColor"><use href="#ms-add"/></svg>
           Novo evento
         </a>
-        <a href="{{ route('participants.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50 transition">
-          Participantes
-        </a>
       </div>
     </div>
   </x-slot>

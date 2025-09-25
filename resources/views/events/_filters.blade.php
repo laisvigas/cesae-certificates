@@ -14,6 +14,7 @@
 @endphp
 
 <form id="filters-form" method="GET" action="{{ route('events.index') }}">
+  <input type="hidden" name="q" value="{{ request('q') }}">
   <div class="border border-gray-200 bg-white shadow rounded-none sm:rounded-lg p-4 sm:p-5">
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div class="min-w-0">

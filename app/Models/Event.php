@@ -97,7 +97,7 @@ class Event extends Model
         });
     }
 
-        public function getStatusAttribute(): string
+    public function getStatusAttribute(): string
     {
         $now = now();
         if ($this->end_at?->lt($now)) return 'Encerrado';

@@ -11,6 +11,8 @@ class EventController extends Controller
 {
     public function indexEvent(Request $request)
     {
+        $q = trim((string) $request->input('q', ''));
+
         $selected = collect($request->input('types', []))
             ->filter(fn ($v) => $v !== '' && $v !== null)
             ->values()
@@ -28,17 +30,27 @@ class EventController extends Controller
             ->withCount('participants')
             ->orderBy('start_at', 'desc')
             ->filterTypes($selected)
-            ->filterStatus($selectedStatus, $now);
+            ->filterStatus($selectedStatus, $now)
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($w) use ($q) {
+                    $w->where('title', 'like', "%{$q}%")
+                    ->orWhere('description', 'like', "%{$q}%")
+                    ->orWhere('issuer_institution', 'like', "%{$q}%")
+                    ->orWhere('issuer_name', 'like', "%{$q}%");
+                });
+            });
 
         $events = $eventsQuery
             ->paginate(20)
             ->withQueryString();
 
+        // total geral (independente da busca/filtros). Se quiser total filtrado, use $events->total()
         $totalAllEvents = Event::count();
 
-        return view('events.index', compact('events','types','selected','selectedStatus', 'totalAllEvents'));
+        return view('events.index', compact(
+            'events', 'types', 'selected', 'selectedStatus', 'totalAllEvents'
+        ));
     }
-
 
     public function createEvent()
     {
