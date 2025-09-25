@@ -50,6 +50,9 @@ class DashboardController extends Controller
         $totalReminders = Note::count();
         $limitReached = $totalReminders > $reminderLimit;
 
+        [$typeLabels, $typeValues] = $this->eventTypePopularity(8);
+        [$enrollMonths, $enrollsPerMonth] = $this->enrollmentsLast12MonthsSeries($now);
+
         return view('dashboard', [
             'allParticipantsCount' => $allParticipantsCount,
             'certificatesCount'    => $certificatesCount,
@@ -71,6 +74,10 @@ class DashboardController extends Controller
             'totalReminders' => $totalReminders,
             'limitReached'   => $limitReached,
             'notesByPriority'=> $notesByPriority,
+            'typeLabels' => $typeLabels,
+            'typeValues' => $typeValues,
+            'enrollMonths'      => $enrollMonths,
+            'enrollsPerMonth'   => $enrollsPerMonth,
         ]);
     }
 
@@ -218,6 +225,51 @@ class DashboardController extends Controller
 
         return [$labels, $series];
     }
+
+    private function eventTypePopularity(int $limit = 8): array
+    {
+        $rows = DB::table('events as e')
+            ->leftJoin('event_types as t', 't.id', '=', 'e.event_type_id')
+            ->leftJoin('event_participant as ep', 'ep.event_id', '=', 'e.id')
+            ->selectRaw('COALESCE(t.name, "Sem tipo") as label, COUNT(ep.participant_id) as total')
+            ->groupBy('e.event_type_id', 't.name')
+            ->orderByDesc('total')
+            ->limit($limit)
+            ->get();
+
+        $labels = $rows->pluck('label')->all();
+        $values = $rows->pluck('total')->map(fn ($v) => (int)$v)->all();
+
+        return [$labels, $values];
+    }
+
+    private function enrollmentsLast12MonthsSeries(Carbon $now): array
+    {
+        $start = $now->copy()->startOfMonth()->subMonths(11);
+        $end   = $now->copy()->endOfMonth();
+
+        // Mapa ym => total de vínculos criados nesse mês
+        $raw = DB::table('event_participant')
+            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as ym, COUNT(*) as total')
+            ->whereBetween('created_at', [$start, $end])
+            ->groupBy('ym')
+            ->orderBy('ym')
+            ->pluck('total', 'ym');
+
+        $labels = [];
+        $series = [];
+
+        $cursor = $start->copy();
+        for ($i = 0; $i < 12; $i++) {
+            $ym = $cursor->format('Y-m');
+            $labels[] = $cursor->translatedFormat('M/Y');
+            $series[] = (int) ($raw[$ym] ?? 0);
+            $cursor->addMonth();
+        }
+
+        return [$labels, $series];
+    }
+
 
     /* ===================== NÃO USADO AINDA ===================== */
 

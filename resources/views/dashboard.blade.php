@@ -133,36 +133,75 @@
         @endforeach
       </div>
 
-      {{-- Gráficos + resumo --}}
       <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 rounded-2xl bg-white ring-1 ring-gray-200 p-4 sm:p-6">
-          <div class="flex items-center justify-between">
-            <h3 class="text-base font-semibold text-gray-900">Certificados gerados nos últimos 12 meses</h3>
-            <div class="text-xs text-gray-500">por mês</div>
-          </div>
-          <div class="mt-4">
-            <canvas id="certificatesLine" data-labels='@json($months)' data-series='@json($certsPerMonth)'></canvas>
-          </div>
-        </div>
 
-        <div class="rounded-2xl bg-white ring-1 ring-gray-200 p-4 sm:p-6">
-          <div class="flex items-center justify-between">
-            <h3 class="text-base font-semibold text-gray-900">Estado dos eventos</h3>
-            <div class="text-xs text-gray-500">atual</div>
-          </div>
-          <div class="mt-4">
-            <canvas id="eventsDonut" data-values='@json([$futureEventsCount, $currentEventsCount, $pastEventsCount])'></canvas>
-          </div>
-          <div class="mt-5 grid grid-cols-3 gap-2 text-xs">
-            <div class="rounded-lg bg-gray-50 p-2"><p class="text-gray-500">Futuros</p><p class="font-semibold text-gray-900">{{ $futureEventsCount }}</p></div>
-            <div class="rounded-lg bg-gray-50 p-2"><p class="text-gray-500">A decorrer</p><p class="font-semibold text-gray-900">{{ $currentEventsCount }}</p></div>
-            <div class="rounded-lg bg-gray-50 p-2"><p class="text-gray-500">Passados</p><p class="font-semibold text-gray-900">{{ $pastEventsCount }}</p></div>
-          </div>
-        </div>
+  {{-- COLUNA ESQUERDA: 2 CARDS (linha + inscrições) --}}
+  <div class="lg:col-span-2 flex flex-col gap-6">
+
+    {{-- Certificados por mês --}}
+    <div class="rounded-2xl bg-white ring-1 ring-gray-200 p-4 sm:p-6">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-semibold text-gray-900">Certificados gerados nos últimos 12 meses</h3>
+        <div class="text-xs text-gray-500">por mês</div>
       </div>
+      <div class="mt-4">
+        <canvas id="certificatesLine"
+                data-labels='@json($months)'
+                data-series='@json($certsPerMonth)'></canvas>
+      </div>
+    </div>
 
+    {{-- NOVO: Inscrições (vínculos) por mês --}}
+    <div class="rounded-2xl bg-white ring-1 ring-gray-200 p-4 sm:p-6">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-semibold text-gray-900">Inscrições nos últimos 12 meses</h3>
+        <div class="text-xs text-gray-500">vínculos por mês</div>
+      </div>
+      <div class="mt-4">
+        <canvas id="enrollmentsLine"
+                data-labels='@json($enrollMonths)'
+                data-series='@json($enrollsPerMonth)'></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  {{-- COLUNA DIREITA: 2 CARDS (donut + tipos preferidos) --}}
+  <div class="flex flex-col gap-6">
+
+      {{-- Barras horizontais: tipos de evento preferidos --}}
+    <div class="rounded-2xl bg-white ring-1 ring-gray-200 p-4 sm:p-6">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-semibold text-gray-900">Tipos de evento preferidos</h3>
+        <div class="text-xs text-gray-500">por inscrições</div>
+      </div>
+      <div class="mt-4">
+        <canvas id="eventTypeBar"
+                data-labels='@json($typeLabels)'
+                data-values='@json($typeValues)'></canvas>
+      </div>
+    </div>
+
+    {{-- Donut de estado dos eventos --}}
+    <div class="rounded-2xl bg-white ring-1 ring-gray-200 p-4 sm:p-6">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-semibold text-gray-900">Estado dos eventos</h3>
+        <div class="text-xs text-gray-500">atual</div>
+      </div>
+      <div class="mt-4">
+        <canvas id="eventsDonut"
+                data-values='@json([$futureEventsCount, $currentEventsCount, $pastEventsCount])'></canvas>
+      </div>
+      <div class="mt-5 grid grid-cols-3 gap-2 text-xs">
+        <div class="rounded-lg bg-gray-50 p-2"><p class="text-gray-500">Futuros</p><p class="font-semibold text-gray-900">{{ $futureEventsCount }}</p></div>
+        <div class="rounded-lg bg-gray-50 p-2"><p class="text-gray-500">A decorrer</p><p class="font-semibold text-gray-900">{{ $currentEventsCount }}</p></div>
+        <div class="rounded-lg bg-gray-50 p-2"><p class="text-gray-500">Passados</p><p class="font-semibold text-gray-900">{{ $pastEventsCount }}</p></div>
+      </div>
     </div>
   </div>
+</div>
+
+
 
   @vite(['resources/js/dashboard.js'])
 </x-app-layout>
