@@ -5,12 +5,9 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight truncate">
                 Lista de Eventos
             </h2>
-            <a href="{{ route('events.create') }}" class="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded bg-green-500 text-white text-sm hover:bg-green-800">
-                <svg class="w-5 h-5" fill="currentColor" aria-hidden="true">
-                    <use href="#ms-add" />
-                </svg>
-                <span class="sm:inline hidden">Novo Evento</span>
-                <span class="sr-only">Novo Evento</span>
+              <a href="{{ url('/events/create-event') }}" class="inline-flex items-center gap-2 rounded-xl bg-gray-900 text-white px-4 py-2 text-sm hover:bg-black/90 transition">
+              <svg class="w-4 h-4" fill="currentColor"><use href="#ms-add"/></svg>
+              Novo evento
             </a>
         </div>
     </x-slot>
@@ -29,6 +26,39 @@
     <div class="py-2">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white shadow rounded-none sm:rounded-lg p-4 sm:p-6">
+
+              {{-- BUSCA POR NOME (agora dentro da caixa) --}}
+              <div class="mb-4">
+                <form id="searchForm" class="flex flex-col sm:flex-row sm:items-center gap-2" method="GET" action="{{ route('events.index') }}">
+                  <input
+                    type="text"
+                    name="q"
+                    value="{{ request('q') }}"
+                    placeholder="Procurar por nome do evento"
+                    class="w-full sm:w-80 rounded border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-gray-900"
+                  >
+                  <div class="flex items-center gap-2">
+                    <button type="submit"
+                            class="rounded border px-3 py-2 text-sm hover:bg-gray-50">
+                      Buscar
+                    </button>
+                    @if(request()->filled('q'))
+                      <a href="{{ route('events.index', request()->except('q','page')) }}"
+                         class="rounded border px-3 py-2 text-sm hover:bg-gray-50">
+                        Limpar
+                      </a>
+                    @endif
+                  </div>
+
+                  {{-- Preserva filtros ao buscar --}}
+                  @foreach((array) request('types', []) as $t)
+                    <input type="hidden" name="types[]" value="{{ $t }}">
+                  @endforeach
+                  @foreach((array) request('status', []) as $s)
+                    <input type="hidden" name="status[]" value="{{ $s }}">
+                  @endforeach
+                </form>
+              </div>
 
               <p class="font-semibold text-sm text-gray-800 leading-tight truncate">Nº total de Eventos: {{ $totalAllEvents }}</p>
               {{-- separador --}}
