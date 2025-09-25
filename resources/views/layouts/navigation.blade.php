@@ -91,8 +91,13 @@
                 <x-responsive-nav-link :href="route('certificates.custom')" :active="request()->routeIs('certificates.*')">
                     {{ __('Gerar Certificado') }}
                 </x-responsive-nav-link>
-                                <x-responsive-nav-link :href="route('participants.index')" :active="request()->routeIs('participants.*')">
+
+                <x-responsive-nav-link :href="route('participants.index')" :active="request()->routeIs('participants.*')">
                     {{ __('Participantes') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('certificates.validate')" :active="request()->routeIs('validate.*')">
+                    {{ __('Validação') }}
                 </x-responsive-nav-link>
             @endif
         </div>
