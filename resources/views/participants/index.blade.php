@@ -29,18 +29,25 @@
 
                 {{-- ===================== Barra de busca ===================== --}}
                 <div class="mb-4 flex flex-col sm:flex-row sm:items-center gap-2">
-                    <form id="searchForm" class="flex items-center gap-2">
+                    <form id="searchForm" class="flex items-center gap-2" method="GET" action="{{ route('participants.index') }}">
                         <input
                             type="text"
-                            id="searchInput"
-                            placeholder="Procurar por nome"
+                            name="q"
+                            value="{{ request('q') }}"
+                            placeholder="Procurar por nome, email ou telemóvel"
                             class="w-full sm:w-80 rounded border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-gray-900"
                         >
-                        <a href="{{ route('participants.index') }}"
-                           id="clearSearch"
-                           class="rounded border px-3 py-2 text-sm hover:bg-gray-50">
+                        <button type="submit"
+                                class="rounded border px-3 py-2 text-sm hover:bg-gray-50">
+                            Buscar
+                        </button>
+
+                        @if(request()->filled('q'))
+                            <a href="{{ route('participants.index') }}"
+                            class="rounded border px-3 py-2 text-sm hover:bg-gray-50">
                             Limpar
-                        </a>
+                            </a>
+                        @endif
                     </form>
                 </div>
 
@@ -119,6 +126,7 @@
                                                 @endif
                                             </dd>
                                         </div>
+                            
 
                                         {{-- Eventos passados (não vinculado, mas com certificado) --}}
                                         <div class="lg:col-span-3 mt-2">
@@ -170,6 +178,11 @@
                                 </div>
                             </div>
                         @endforeach
+                        @if(method_exists($participants, 'links'))
+                        <div class="mt-4">
+                            {{ $participants->onEachSide(1)->links() }}
+                        </div>
+                        @endif
 
                     </div>
                 @endif

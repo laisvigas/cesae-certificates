@@ -8,20 +8,33 @@ use App\Models\Participant;
 use Illuminate\Http\Request;
 use App\Models\CertificateTemplate;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+
 
 class ParticipantController extends Controller
 {
-    public function indexParticipants()
+    public function indexParticipants(Request $request)
     {
-        $participants = Participant::with([
-            'events',
-            'certificates.event'
-        ])->orderBy('name')->get();
+        $perPage = (int) $request->input('per_page', 20);
+        $q = trim($request->input('q', ''));
 
-        $totalParticipants = $participants->count();
+        $query = Participant::with(['events', 'certificates.event'])
+            ->orderBy('name');
+
+        if ($q !== '') {
+            $query->where(function ($qb) use ($q) {
+                $qb->where('name', 'like', "%{$q}%")
+                ->orWhere('email', 'like', "%{$q}%")
+                ->orWhere('phone', 'like', "%{$q}%");
+            });
+        }
+
+        $participants = $query->paginate($perPage)->withQueryString();
+        $totalParticipants = Participant::count();
 
         return view('participants.index', compact('participants', 'totalParticipants'));
     }
+
 
     public function showParticipantsInEvent(Event $event) // fetch participants for this one event
     {
