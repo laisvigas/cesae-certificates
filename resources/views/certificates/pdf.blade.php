@@ -8,7 +8,7 @@
   @php
     // A barra só deve aparecer quando for preview web E houver public_id (página pública).
     $resolvedPublicId = $public_id ?? request()->route('publicId');
-    $showActionBar = ($preview_mode ?? false) && !empty($resolvedPublicId);
+    $showActionBar   = ($preview_mode ?? false) && !empty($resolvedPublicId);
   @endphp
 
   {{-- Assets e metas só no modo web (não entram no PDF) --}}
@@ -23,129 +23,195 @@
   @endif
 
   <style>
-    /* Página A4 deitada */
+    /* ===== Página A4 deitada ===== */
     @page { size: 297mm 210mm; margin: 0; }
 
     html, body { margin: 0; padding: 0; }
     body { font-family: DejaVu Sans, Arial, sans-serif; color: #222; }
 
+    /* ===== Tokens de design ===== */
     :root {
       --primary: {{ $primary_color ?? '#6d28d9' }};
-      --primary-light: #000000ff;
+      --accent:  {{ $accent_color ?? '#b79200' }};
+      --frame-thick: 1.6mm;    /* espessura da borda externa */
+      --frame-radius: 4mm;     /* raio da borda externa */
+      --inner-gap: 6mm;        /* recuo entre borda 1 e borda 2 */
+      --inner-thick: 0.6mm;    /* espessura da borda interna */
+      --title-letterspace: 1.5px;
     }
 
-    /* Moldura */
+    /* ===== Moldura dupla ===== */
     .frame {
       position: fixed;
       top: 10mm; left: 10mm; right: 10mm; bottom: 10mm;
-      border: 1.5mm solid var(--primary);
+      border: var(--frame-thick) solid var(--primary);
+      border-radius: var(--frame-radius);
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    .frame::after {
+      content: "";
+      position: absolute;
+      top: var(--inner-gap);
+      left: var(--inner-gap);
+      right: var(--inner-gap);
+      bottom: var(--inner-gap);
+      border: var(--inner-thick) solid var(--primary);
+      border-radius: calc(var(--frame-radius) - 1mm);
       box-sizing: border-box;
     }
 
-    /* ---- Área útil da moldura ---- */
+    /* ===== Área útil ===== */
     .content-area {
       position: fixed;
-      top: 25mm; left: 12mm; right: 12mm; bottom: 13mm;
+      top: calc(25mm + 2mm);
+      left: 14mm; right: 14mm; bottom: 15mm;
       box-sizing: border-box;
     }
 
+    /* ===== Centralização ===== */
     .vcenter { display: table; width: 100%; height: 100%; table-layout: fixed; }
     .vcenter-cell { display: table-cell; vertical-align: middle; text-align: center; padding: 0 10mm; }
 
-    /* Watermark  */
+    /* ===== Watermark ===== */
     .watermark {
-      position: absolute; top: 50%; left: 50%;
+      position: absolute;
+      top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       font-size: 72pt; color: var(--primary); opacity: .06;
       white-space: nowrap; pointer-events: none;
     }
 
-    /* Cabeçalho / Logo */
-    .logo { margin-bottom: 6mm; }
-    .logo img { max-height: 14mm; }
+    /* ====== LOGO ====== */
+    .logo { 
+      margin-bottom: 7mm; 
+      text-align: center;        
+    }
+    .logo img{
+      max-height: 20mm;
+      display: block;               
+      margin-left: auto; 
+      margin-right: auto;      
+    }
 
-    /* Títulos e texto  */
-    .title { font-size: 20pt; letter-spacing: .5px; margin: 0 0 6mm 0; text-transform: uppercase; color: #111; }
-    .subtitle { font-size: 11pt; color: #666; margin: 0 0 6mm 0; }
-    .intro { font-size: 11pt; margin: 0 0 4mm 0; }
-    .name { font-size: 28pt; font-weight: 700; margin: 2mm 0 6mm 0; line-height: 1.1; }
-    .course-line { font-size: 12pt; margin: 0 0 2mm 0; }
-    .course { font-weight: 700; }
-    .date-line { font-size: 11pt; color: #444; margin-top: 2mm; }
+    /* ===== Tipografia ===== */
+    .title {
+      font-family: "DejaVu Serif", Georgia, "Times New Roman", serif;
+      font-size: 28pt;
+      letter-spacing: var(--title-letterspace);
+      margin: 0 0 4mm 0;
+      text-transform: uppercase;
+      color: #111;
+    }
+    .subtitle {
+      font-size: 10.5pt;
+      color: #666;
+      margin: 0 0 8mm 0;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+    }
+    .intro { font-size: 11pt; margin: 0 0 3mm 0; color: #444; }
+    .name {
+      font-family: "DejaVu Serif", Georgia, "Times New Roman", serif;
+      font-size: 32pt; font-weight: 700;
+      margin: 1mm 0 6mm 0; line-height: 1.05; letter-spacing: .2px;
+    }
 
-    /* Divisor */
-    .rule { margin: 8mm auto; border: 0; border-top: .4mm solid var(--primary-light); width: 70%; }
+    /* ===== Linhas do texto do curso ===== */
+    .course-line { font-size: 12pt; margin: 0 0 2.5mm 0; }
+    .main-line  { font-weight: 700; }
+    .extra-line { font-size: 11pt; color: #444; margin-top: 1.5mm; }
+    .date-line  { font-size: 11pt; color: #444; margin-top: 2mm; }
 
-    /* Rodapé: assinatura + código/entidade */
+    /* ===== Divisória ===== */
+    .rule {
+      margin: 9mm auto;
+      border: 0; border-top: .4mm solid var(--primary);
+      width: 68%;
+    }
+
+    /* ===== Rodapé (assinatura central) ===== */
     .footer-table { width: 100%; border-collapse: collapse; margin-top: 6mm; font-size: 10pt; color: #444; }
-    .footer-table td { vertical-align: top; padding-top: 6mm; }
+    .footer-table td { vertical-align: top; padding-top: 7mm; }
 
-    .sig-block { text-align: center; width: 55%; }
-    .sig-img { max-height: 16mm; display: block; margin: 0 auto 2mm auto; }
-    .sig-line { border-top: .3mm solid #999; margin: 0 auto 2mm auto; width: 70%; height: 0; }
+    .sig-block { text-align: center; width: 100%; }
+    .sig-img   { max-height: 16mm; display: block; margin: 0 auto 2mm auto; }
+    .sig-line  { border-top: .3mm solid #999; margin: 0 auto 2mm auto; width: 70%; height: 0; }
 
-    .info-block { text-align: right; width: 45%; font-size: 9.5pt; line-height: 1.4; }
     .muted { color: #666; }
     .code  { font-family: "DejaVu Sans Mono", monospace; letter-spacing: .3px; }
 
+    /* ===== Código de validação fixo no rodapé ===== */
+    .validation-code {
+      position: fixed;
+      left: 14mm; right: 14mm;
+      bottom: 12mm;            
+      text-align: center;
+      font-size: 5pt;
+      color: #444;
+    }
+
+    /* ===== Preview (web) ===== */
     @if(($preview_mode ?? false) || request()->query('preview'))
-    /* --- Estilos para o preview (web) --- */
-    .frame {
-      top: 2vw; left: 2vw; right: 2vw; bottom: 2vw;
-      border-width: 0.25vw;
-    }
-    .content-area {
-      top: 2.2vw; left: 2.2vw; right: 2.2vw; bottom: 2.2vw;
-    }
-    .vcenter-cell { padding: 0 4vw; }
-    .logo {
-        margin-bottom: 6mm;
-        text-align: center; /* Adicionado para centralizar a imagem dentro da div */
-    }
-    .logo img {
-        max-height: 5vw;
-        margin: 0 auto; /* Centraliza a imagem se a div for um flexbox ou se for tratada como bloco */
-        display: block; /* Garante que a margin: auto funcione */
-    }
+      .frame {
+        top: 2vw; left: 2vw; right: 2vw; bottom: 2vw;
+        border-width: .25vw; border-radius: .6vw;
+        overflow: hidden;
+      }
+      .frame::after {
+        /* evitar inset: por consistência */
+        top: 1.2vw; left: 1.2vw; right: 1.2vw; bottom: 1.2vw;
+        border-width: .1vw; border-radius: .45vw;
+        box-sizing: border-box;
+      }
+      .content-area { top: calc(2.2vw + .8vw); left: 3vw; right: 3vw; bottom: 3vw; }
+      .vcenter-cell { padding: 0 4vw; }
 
-    .watermark {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+      .logo { margin-bottom: 2.2vw; text-align:center; }
+      .logo img{
+        max-height: 6vw;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+      }
 
-        /* MODIFICAÇÕES AQUI */
-        font-size: 10vw; /* Usa uma unidade relativa (viewport width) para o tamanho da fonte */
-        white-space: nowrap; /* Evita que o texto quebre */
+      .watermark { font-size: 10vw; }
 
-        color: var(--primary);
-        opacity: .06;
-        pointer-events: none;
-    }
-    .title { font-size: 2.2vw; margin-bottom: 0.8vw; }
-    .subtitle { font-size: 1vw; margin-bottom: 0.8vw; }
-    .intro { font-size: 1vw; margin-bottom: 0.6vw; }
-    .name { font-size: 3.2vw; margin: 0.3vw 0 1vw 0; }
-    .course-line { font-size: 1.2vw; }
-    .date-line { font-size: 1vw; margin-top: 0.4vw; }
-    .rule { margin: 2vw auto; border-top-width: 0.08vw; width: 70%; }
-    .footer-table { margin-top: 1.5vw; font-size: 0.8vw; }
-    .footer-table td { padding-top: 1.5vw; }
-    .sig-img { max-height: 4vw; margin: 0 auto 0.5vw auto; }
-    .sig-line { border-top-width: 0.05vw; margin-bottom: 0.5vw; }
-    .info-block { font-size: 0.8vw; }
+      .title { font-size: 3vw; margin-bottom: 1vw; }
+      .subtitle { font-size: 1vw; margin-bottom: 1.2vw; letter-spacing: .09vw; }
+      .intro { font-size: 1.05vw; margin-bottom: .8vw; }
+      .name  { font-size: 3.6vw; margin-bottom: 1.2vw; }
 
-    /* Se existir barra de ações, empurra o certificado para baixo */
-    @if($showActionBar)
-      .frame { top: calc(2vw + 72px); }
-      .content-area { top: calc(2.2vw + 72px); }
-    @endif
+      .course-line { font-size: 1.25vw; }
+      .main-line   { font-weight: 700; }
+      .extra-line  { font-size: 1.05vw; color: #444; }
+
+      .date-line { font-size: 1vw; margin-top: .5vw; }
+      .rule      { width: 70%; margin: 2.2vw auto; border-top-width: .08vw; }
+
+      .footer-table   { margin-top: 1.6vw; font-size: .9vw; }
+      .footer-table td{ padding-top: 1.6vw; }
+      .sig-img        { max-height: 4.2vw; margin-bottom: .6vw; }
+      .sig-line       { border-top-width: .06vw; margin-bottom: .6vw; }
+
+      /* Código de validação no preview */
+      .validation-code {
+        left: 3vw; right: 3vw;
+        bottom: 3vw;
+        text-align: center;
+        font-size: .9vw;
+      }
+
+      /* Se existir barra de ações, empurra o certificado para baixo */
+      @if($showActionBar)
+        .frame       { top: calc(2vw + 72px); }
+        .content-area{ top: calc(2.2vw + 72px + .8vw); }
+      @endif
     @endif
   </style>
 </head>
 
 <body>
-
   {{-- Barra de ações (só no modo web e quando houver public_id) --}}
   @if($showActionBar)
     @php
@@ -190,8 +256,7 @@
 
   <!-- Área útil -->
   <div class="content-area">
-
-    <!-- Watermark opcional -->
+    {{-- Watermark opcional --}}
     @if(!empty($watermark))
       <div class="watermark">{{ $watermark }}</div>
     @endif
@@ -216,46 +281,40 @@
         <div class="name">{{ $name ?? 'Nome do participante' }}</div>
 
         @php
-          $etype  = $event_type_name ?? 'evento';
-          $inst   = $institution_name ?? config('app.name');
-          $dur    = $duration_phrase ?? null;
-          $when   = $date_phrase ?? null;
+          $etype = $event_type_name ?? 'evento';
+          $inst  = $institution_name ?? config('app.name');
+          $dur   = $duration_phrase ?? null;
+          $when  = $date_phrase ?? null;
 
-          // Checa se o título do evento já contém o tipo de evento para evitar repetição de palavras como Curso de Curso Python
-          // Use str_contains to check if the event title includes the event type name
-
-          if (str_contains(Str::lower($event_title), Str::lower($etype))) {
-            /*If it contains it, just use the event title*/
+          // Checa se o título já contém o tipo para evitar repetição
+          if (!empty($event_title) && str_contains(Str::lower($event_title), Str::lower($etype))) {
             $mainPhrase = $event_title;
-            } else {
-            /*Otherwise, combine the event type and event title*/
-            $mainPhrase = "{$etype} " . $event_title;
-            }
+          } else {
+            $mainPhrase = trim(($etype ? "{$etype} " : '') . ($event_title ?? ''));
+          }
 
-          /*Texto que pode ser personalisado pelo usuário*/
+          // Texto personalizável
           $prefix = $course_line_prefix ?? 'Concluiu com êxito o/a ';
 
-          /*monta frase final com pontuação certa
-          -> array_filter(): This function removes all empty or null values from an array.
-          -> $parts: temporary array that holds all the individual phrases to combine.
-          -> implode() takes all the elements from an array ($parts) and joins them into a single string.
-          -> The first argument, ', ', specifies the separator to use between each element.
-          -> The final . is added to the end to complete the sentence.
-          -> The complete $sentence variable is then passed to the html.*/
-
-          $parts = array_filter([
-            "{$prefix} {$mainPhrase}",
+          // Separação em duas linhas
+          $mainLine = "{$prefix} {$mainPhrase}";
+          $extraParts = array_filter([
             $inst ? "promovido por {$inst}" : null,
             $dur,
-            $when ? $when : null,
+            $when ?: null,
           ]);
-          $sentence = implode(', ', $parts) . '.';
+          $extraLine = implode(', ', $extraParts) . (count($extraParts) ? '.' : '');
         @endphp
 
-        <p class="course-line">{{ $sentence }}</p>
+        {{-- Linha principal e linhas secundárias --}}
+        <p class="course-line main-line">{{ $mainLine }}</p>
+        @if($extraLine)
+          <p class="course-line extra-line">{{ $extraLine }}</p>
+        @endif
 
         <hr class="rule" />
 
+        {{-- Rodapé: assinatura centralizada --}}
         <table class="footer-table">
           <tr>
             <td class="sig-block">
@@ -268,12 +327,6 @@
                 @if(!empty($signer_role)) <span class="muted">{{ $signer_role }}</span>@endif
               </div>
             </td>
-            <td class="info-block">
-              @if(!empty($institution_name))
-                <div><span class="muted">Entidade:</span> {{ $institution_name }}</div>
-              @endif
-              <div><span class="muted">Código de validação:</span> <span class="code">{{ $ref ?? '—' }}</span></div>
-            </td>
           </tr>
         </table>
 
@@ -281,5 +334,13 @@
     </div>
   </div>
 
+  {{-- Código de validação fixo no rodapé (dentro do body) --}}
+  @if(!empty($ref))
+    <div class="validation-code">
+      <span class="muted">Código:</span>
+      <span class="code">{{ $ref }}</span>
+    </div>
+  @endif
 </body>
 </html>
+
