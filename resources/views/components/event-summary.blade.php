@@ -47,6 +47,13 @@
             </select>
           </form>
         </span>
+        <span>
+              <a href="{{ route('events.view-edit', $event->id) }}"
+                class="inline-flex items-center justify-center rounded bg-blue-600 p-2 text-white hover:bg-blue-700"
+                title="Editar" aria-label="Editar">
+                <svg class="w-4 h-4" fill="currentColor" aria-hidden="true"><use href="#ms-edit"/></svg>
+            </a>
+        </span>
       </div>
     </div>
 

@@ -483,3 +483,89 @@ document.getElementById('btnDeleteTemplate')?.addEventListener('click', async fu
         alert('Erro ao apagar template.');
     }
 });
+
+
+/* =======================
+* 11) Validar/encontrar certificado pelo codigo na validate.blade
+* ======================= */
+document.addEventListener('DOMContentLoaded', function() {
+    const previewContainer = document.getElementById('certificatePreviewContainer');
+    const iframe = document.getElementById('certificatePreviewFrame');
+    const BASE_W = 1123;
+    const BASE_H = 794;
+
+    const successDiv = document.getElementById('successMessage');
+    const errorDiv = document.getElementById('searchError');
+
+    function applyScale() {
+        if (!iframe) return;
+        const host = iframe.parentElement;
+        if (!host) return;
+
+        const hostWidth = host.clientWidth;
+        const hostHeight = host.clientHeight;
+
+        const scale = Math.min(hostWidth / BASE_W, hostHeight / BASE_H, 1);
+        const scaledWidth = BASE_W * scale;
+        const scaledHeight = BASE_H * scale;
+
+        iframe.style.width = `${scaledWidth}px`;
+        iframe.style.height = `${scaledHeight}px`;
+        iframe.style.transformOrigin = 'top center';
+        iframe.style.border = '1px solid #e5e7eb';
+        iframe.style.borderRadius = '.5rem';
+        iframe.style.background = '#fff';
+        iframe.style.boxShadow = '0 1px 6px rgba(0,0,0,.08)';
+    }
+
+    // Observe parent resize to maintain proportional scaling
+    if (previewContainer && 'ResizeObserver' in window) {
+        const ro = new ResizeObserver(() => applyScale());
+        ro.observe(previewContainer);
+    }
+
+    document.getElementById('btnSearchCertificate').addEventListener('click', function() {
+        const code = document.getElementById('certificateCode').value.trim();
+
+        // Hide both messages at the start of a new search
+        errorDiv.classList.add('hidden');
+        successDiv.classList.add('hidden');
+        previewContainer.style.display = 'none';
+        successDiv.textContent = '';
+        errorDiv.textContent = '';
+
+        if (!code) {
+            errorDiv.textContent = 'Por favor, insira um código.';
+            errorDiv.classList.remove('hidden');
+            return;
+        }
+
+        fetch(`/certificates/search?code=${code}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    errorDiv.textContent = data.error;
+                    errorDiv.classList.remove('hidden');
+                    return;
+                }
+
+                // Set iframe content and scale
+                iframe.srcdoc = data.html;
+                previewContainer.style.display = 'block';
+                applyScale();
+
+                // Set success message text dynamically
+                successDiv.textContent = 'Certificado encontrado. Validade e autenticidade confirmadas.';
+                successDiv.classList.remove('hidden');
+            })
+            .catch(err => {
+                errorDiv.textContent = 'Ocorreu um erro ao buscar o certificado.';
+                errorDiv.classList.remove('hidden');
+                console.error(err);
+            });
+    });
+
+    // Window resize scaling
+    window.addEventListener('resize', () => applyScale());
+});
+

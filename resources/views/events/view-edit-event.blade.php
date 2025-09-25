@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">Editar Evento</h2>
-            <a href="{{ route('events.index') }}" class="text-sm underline">Voltar à lista</a>
+            <a href="{{ url()->previous() }}" class="text-sm underline">Voltar</a>
         </div>
     </x-slot>
 
@@ -25,7 +25,7 @@
                     'submitLabel' => 'Salvar alterações',
                     'types'       => $types,
                     'event'       => $event,
-                    'typeRequired'=> false, 
+                    'typeRequired'=> false,
                 ])
             </div>
         </div>

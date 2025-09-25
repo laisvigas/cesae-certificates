@@ -98,6 +98,12 @@ Route::middleware(['auth', 'role:admin,staff'])->group(function () {
     Route::post('/certificates/preview-custom', [CertificateController::class, 'previewCustom'])->name('certificates.preview.custom');
 
     Route::post('/certificates/preview-certificates', [CertificateController::class, 'preview'])->name('certificates.preview');
+
+    // Rota para a validate blade
+    Route::get('/certificates/validate', [CertificateController::class, 'validate'])
+        ->name('certificates.validate');
+
+
 });
 
 // Rotas fora do middleware
@@ -108,6 +114,10 @@ Route::post('/import-csv/{event}', [ParticipantController::class, 'importCsv']) 
 // Importar participantes de outro evento
 Route::post('/import-participants', [ParticipantController::class, 'importFromEventSimple'])
     ->name('participants.importFromEventSimple');
+
+// Rota para buscar o certificado via código (usada pelo JS fetch)
+Route::get('/certificates/search', [CertificateController::class, 'searchByCode'])
+    ->name('certificates.search');
 
 
 // Rotas de templates

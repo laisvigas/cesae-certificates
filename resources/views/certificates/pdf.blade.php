@@ -83,15 +83,15 @@
     }
 
     /* ====== LOGO ====== */
-    .logo { 
-      margin-bottom: 7mm; 
-      text-align: center;        
+    .logo {
+      margin-bottom: 7mm;
+      text-align: center;
     }
     .logo img{
       max-height: 20mm;
-      display: block;               
-      margin-left: auto; 
-      margin-right: auto;      
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     /* ===== Tipografia ===== */
@@ -145,7 +145,7 @@
     .validation-code {
       position: fixed;
       left: 14mm; right: 14mm;
-      bottom: 12mm;            
+      bottom: 12mm;
       text-align: center;
       font-size: 5pt;
       color: #444;
@@ -216,40 +216,55 @@
   @if($showActionBar)
     @php
       $shareUrl  = urlencode(url()->current());
-      $shareText = urlencode("Meu certificado: " . ($event_title ?? ''));
+      $shareUrl_demo  = 'https://i.postimg.cc/4yQM0wRS/79.png';
+      $shareText = "Certificado conquistado!%0AConcluí com sucesso o {$event_title}, promovido pelo "
+        . ($institution_name ?? 'Cesae Digital')
+        . ".%0AOrgulho de mais uma etapa concluída na minha jornada profissional!";
+
     @endphp
 
-    <div class="max-w-5xl mx-auto mt-6 mb-4 px-4 font-sans">
-      <div class="flex flex-wrap gap-2">
-        <a href="{{ route('certificates.public.download', $resolvedPublicId) }}"
-           class="inline-flex items-center px-3 py-2 text-sm border rounded-md no-underline hover:bg-gray-50">
-          Baixar PDF
-        </a>
+        <div class="fixed top-6 left-6 bg-white shadow-lg rounded-xl p-3 z-50">
+            <div class="flex flex-wrap gap-2">
 
-        <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ $shareUrl }}" target="_blank" rel="noopener"
-           class="inline-flex items-center px-3 py-2 text-sm border rounded-md no-underline hover:bg-gray-50">
-          Compartilhar no LinkedIn
-        </a>
+                {{-- Download PDF --}}
+                <a href="{{ route('certificates.public.download', $resolvedPublicId) }}"
+                class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 transition">
+                Baixar PDF
+                </a>
 
-        <a href="https://www.facebook.com/sharer/sharer.php?u={{ $shareUrl }}" target="_blank" rel="noopener"
-           class="inline-flex items-center px-3 py-2 text-sm border rounded-md no-underline hover:bg-gray-50">
-          Facebook
-        </a>
+                {{-- LinkedIn --}}
+                <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ $shareUrl_demo }}&text={{ $shareText }}"
+                target="_blank" rel="noopener"
+                class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-white bg-[#0077b5] hover:bg-[#005582] transition">
+                LinkedIn
+                </a>
 
-        <a href="https://twitter.com/intent/tweet?url={{ $shareUrl }}&text={{ $shareText }}" target="_blank" rel="noopener"
-           class="inline-flex items-center px-3 py-2 text-sm border rounded-md no-underline hover:bg-gray-50">
-          X/Twitter
-        </a>
+                {{-- Facebook --}}
+                <a href="https://www.facebook.com/sharer/sharer.php?u={{ $shareUrl }}"
+                target="_blank" rel="noopener"
+                class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-white bg-[#1877f2] hover:bg-[#145dbf] transition">
+                Facebook
+                </a>
 
-        <a href="https://wa.me/?text={{ $shareText }}%20{{ $shareUrl }}" target="_blank" rel="noopener"
-           class="inline-flex items-center px-3 py-2 text-sm border rounded-md no-underline hover:bg-gray-50">
-          WhatsApp
-        </a>
-      </div>
+                {{-- Twitter/X --}}
+                <a href="https://twitter.com/intent/tweet?url={{ $shareUrl }}&text={{ $shareText }}"
+                target="_blank" rel="noopener"
+                class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-white bg-[#1da1f2] hover:bg-[#0d95e8] transition">
+                X/Twitter
+                </a>
 
-      <hr class="mt-4 border-t border-gray-200">
+                {{-- WhatsApp --}}
+                <a href="https://wa.me/?text={{ $shareText }}%20{{ $shareUrl }}"
+                target="_blank" rel="noopener"
+                class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-white bg-[#25d366] hover:bg-[#1da851] transition">
+                WhatsApp
+                </a>
+
+            </div>
     </div>
-  @endif
+
+@endif
+
 
   <!-- Moldura -->
   <div class="frame"></div>
