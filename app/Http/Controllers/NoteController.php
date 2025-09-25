@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Note;
@@ -8,14 +9,24 @@ class NoteController extends Controller
 {
     public function store(Request $request)
     {
+        // Limite duro de lembretes
+        $LIMIT = 6;
+
+        if (Note::count() >= $LIMIT) {
+            return back()
+                ->with('reminders_full', "Ops! Já há lembretes demais aqui!")
+                ->withInput();
+        }
+
         $data = $request->validate([
             'titulo'   => 'nullable|string|max:255',
-            'mensagem' => 'required|string',
+            'mensagem' => 'required|string|max:120',
             'priority' => 'required|in:high,medium,low',
         ]);
 
         Note::create($data);
-        return back()->with('success', 'Nota criada!');
+
+        return back()->with('success', 'Lembrete adicionado.');
     }
 
     public function edit(Note $note)
@@ -27,17 +38,19 @@ class NoteController extends Controller
     {
         $data = $request->validate([
             'titulo'   => 'nullable|string|max:255',
-            'mensagem' => 'required|string',
+            'mensagem' => 'required|string|max:120',
             'priority' => 'required|in:high,medium,low',
         ]);
 
         $note->update($data);
-        return redirect()->route('dashboard')->with('success', 'Nota atualizada!');
+
+        return redirect()->route('dashboard')->with('success', 'Lembrete atualizado.');
     }
 
     public function destroy(Note $note)
     {
         $note->delete();
-        return back()->with('success', 'Nota excluída!');
+
+        return back()->with('success', 'Lembrete excluído.');
     }
 }
