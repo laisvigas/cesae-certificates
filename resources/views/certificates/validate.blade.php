@@ -7,9 +7,9 @@
         </h2>
     </x-slot>
 
-    <div class="py-6">
-        <div class="py-6 w-full sm:px-6 lg:px-8">
-            <div class="bg-white shadow rounded-lg p-6">
+    <div class="py-2">
+        <div class="py-1 w-full sm:px-6 lg:px-8">
+            <div class="bg-white shadow rounded-lg p-4 sm:p-6 min-h-[80vh]">
 
                 {{-- Barra de busca --}}
                 <div class="flex flex-col sm:flex-row gap-2 mb-6 justify-center">
@@ -29,11 +29,10 @@
 
                 {{-- Mensagem de sucesso --}}
                 <div id="successMessage" class="text-center text-green-600 font-bold mb-4 hidden">
-                    Certificado encontrado. Validade e autenticidade confirmadas.
                 </div>
 
                 {{-- Mensagem de erro --}}
-                <div id="searchError" class="text-red-600 text-sm mb-4 hidden"></div>
+                <div id="searchError" class=" text-center text-red-600 text-sm mb-4 hidden"></div>
 
                 {{-- Preview do certificado --}}
                 <div id="certificatePreviewContainer" class="rounded-lg border bg-white" style="display:none;">

@@ -105,7 +105,7 @@
   </section>
   {{-- Ações --}}
   <div class="flex items-center justify-end pt-2">
-    <a href="{{ route('events.index') }}"
+    <a href="{{ url()->previous() }}"
       class="mr-2 rounded-xl border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50">
       Cancelar
     </a>
